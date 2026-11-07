@@ -7,9 +7,10 @@ import { type EvidencePacket } from "./evidence-packet.ts";
 function renderPacketPdf(packet: EvidencePacket): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const margin = 48;
+    const label = packet.mode === "paypal_sandbox" ? "PAYPAL REC  /  PAYPAL SANDBOX" : "PAYPAL REC  /  SYNTHETIC DEMO";
     const doc = new PDFDocument({
       size: "A4", margin, bufferPages: true,
-      info: { Title: "PayPal Rec - Reviewed evidence packet", Subject: "Synthetic demo draft" },
+      info: { Title: "PayPal Rec - Reviewed evidence packet", Subject: `${label} draft` },
     });
     const chunks: Buffer[] = [];
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -34,7 +35,7 @@ function renderPacketPdf(packet: EvidencePacket): Promise<Buffer> {
       doc.moveDown(0.35);
     }
 
-    doc.font("Strong").fontSize(10).fillColor(accent).text("PAYPAL REC  /  SYNTHETIC DEMO");
+    doc.font("Strong").fontSize(10).fillColor(accent).text(label);
     doc.moveDown(0.5);
     doc.font("Strong").fontSize(28).fillColor(ink).text("Reviewed evidence packet");
     doc.moveDown(0.5);
@@ -89,9 +90,9 @@ function renderPacketPdf(packet: EvidencePacket): Promise<Buffer> {
       const y = doc.page.height - 32;
       doc.moveTo(margin, y - 7).lineTo(doc.page.width - margin, y - 7).lineWidth(0.5).strokeColor("#c4d1dd").stroke();
       doc.font("Body").fontSize(8).fillColor(muted)
-        .text("PAYPAL REC  /  SYNTHETIC DEMO", margin, y, { lineBreak: false });
-      const label = `Page ${i + 1} of ${count}`;
-      doc.text(label, doc.page.width - margin - doc.widthOfString(label), y, { lineBreak: false });
+        .text(label, margin, y, { lineBreak: false });
+      const pageNumber = `Page ${i + 1} of ${count}`;
+      doc.text(pageNumber, doc.page.width - margin - doc.widthOfString(pageNumber), y, { lineBreak: false });
     }
     doc.end();
   });

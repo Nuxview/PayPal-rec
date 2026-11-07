@@ -41,7 +41,7 @@ function resolveCitation(sources: Map<string, Source>, citation: MatchCitation):
   };
 }
 
-export function buildReviewSnapshot({ sources, report, payment }: Fixture) {
+export function buildReviewSnapshot({ sources, report, payment }: Fixture, caseId?: string) {
   const byId = new Map(sources.map((source) => [source.source_id, source]));
   const excerpts = (citations: MatchCitation[]) => citations.map((citation) => resolveCitation(byId, citation));
   const proposals = report.matches.map((match) => ({
@@ -69,10 +69,10 @@ export function buildReviewSnapshot({ sources, report, payment }: Fixture) {
 
   // Decisions apply only to this report and these exact source snapshots.
   const version = createHash("sha256")
-    .update(JSON.stringify({ report, sources: [...sources].sort((a, b) => a.source_id.localeCompare(b.source_id)) }))
+    .update(JSON.stringify({ caseId, report, sources: [...sources].sort((a, b) => a.source_id.localeCompare(b.source_id)) }))
     .digest("hex");
   return {
-    version, captureId: payment.transaction_id, amount: `${payment.amount.currency} ${payment.amount.value}`,
+    version, mode: payment.source_mode, captureId: payment.transaction_id, amount: `${payment.amount.currency} ${payment.amount.value}`,
     proposals, followUp, excluded,
   };
 }

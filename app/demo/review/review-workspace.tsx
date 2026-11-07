@@ -43,8 +43,9 @@ function CitationInspector({ citations, group }: { citations: ReviewCitation[]; 
 
 const decisionLabel = { accepted: "Accepted", rejected: "Rejected", pending: "Pending" };
 
-export function ReviewWorkspace({ review, decisions, feedback }: {
+export function ReviewWorkspace({ review, decisions, feedback, sandbox }: {
   review: ReviewSnapshot; decisions: ReviewDecisions; feedback?: string | string[];
+  sandbox?: { caseId: string; save: (data: FormData) => Promise<void> };
 }) {
   const counts = review.proposals.reduce((count, { id }) => {
     count[decisions[id] ?? "pending"]++;
@@ -65,7 +66,7 @@ export function ReviewWorkspace({ review, decisions, feedback }: {
     <>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900/70 p-4">
         <p className="text-sm text-slate-300">
-          Demo decisions are saved in this browser.
+          {sandbox ? "Sandbox review decisions are saved in this browser." : "Demo decisions are saved in this browser."}
         </p>
         <dl aria-live="polite" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <div className="flex items-center gap-1.5"><dt className="text-slate-400">Pending</dt><dd className="font-semibold tabular-nums">{counts.pending}</dd></div>
@@ -73,9 +74,9 @@ export function ReviewWorkspace({ review, decisions, feedback }: {
           <div className="flex items-center gap-1.5"><dt className="text-slate-400">Rejected</dt><dd className="font-semibold tabular-nums text-rose-300">{counts.rejected}</dd></div>
         </dl>
       </div>
-      <form method="post" action="/api/demo/reviewed-packet" aria-label="Download reviewed packet"
+      <form method="post" action={sandbox ? `/sandbox/cases/${sandbox.caseId}/packet` : "/api/demo/reviewed-packet"} aria-label="Download reviewed packet"
         className="mb-8 rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-        <input type="hidden" name="review" value={JSON.stringify({ version: review.version, decisions })} />
+        {!sandbox && <input type="hidden" name="review" value={JSON.stringify({ version: review.version, decisions })} />}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="max-w-2xl text-sm text-slate-300">
             {counts.accepted
@@ -114,7 +115,8 @@ export function ReviewWorkspace({ review, decisions, feedback }: {
                   </div>
                   <p className="mt-2 break-words text-sm leading-relaxed text-slate-300">{item.statement}</p>
                   <CitationInspector citations={item.citations} group={item.id} />
-                  <form action={saveDemoDecision} className="mt-4 flex flex-wrap gap-2">
+                  <form action={sandbox?.save ?? saveDemoDecision} className="mt-4 flex flex-wrap gap-2">
+                    {sandbox && <input type="hidden" name="case" value={sandbox.caseId} />}
                     <input type="hidden" name="proposal" value={item.id} />
                     <input type="hidden" name="version" value={review.version} />
                     {(["accepted", "rejected"] as const).map((choice) => {

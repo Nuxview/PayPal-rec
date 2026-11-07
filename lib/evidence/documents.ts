@@ -49,6 +49,17 @@ export function decodeDocument(bytes: Uint8Array): string {
   return content;
 }
 
+export function merchantDocument(name: string, bytes: Uint8Array): EvidenceDocument {
+  validateName(name);
+  return {
+    source_id: `DOC-${createHash("sha256").update(bytes).digest("hex")}`,
+    source_kind: "merchant_document",
+    source_origin: "merchant_provided",
+    source_name: name,
+    source_content: decodeDocument(bytes),
+  };
+}
+
 async function readDocument(path: string | URL) {
   try {
     const handle = await open(path, constants.O_RDONLY | (constants.O_NONBLOCK ?? 0));

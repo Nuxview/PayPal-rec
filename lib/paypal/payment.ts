@@ -1,5 +1,5 @@
 export type PaymentMode = "paypal_sandbox" | "synthetic_replay";
-type Party = { name: string; email: string };
+type Party = { name: string; email: string | null };
 
 export type CasePayment = {
   source_mode: PaymentMode;
