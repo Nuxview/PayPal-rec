@@ -4,7 +4,7 @@ This is a private, single-operator workspace for local testing. It reads existin
 
 ## Set up locally
 
-1. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/), select **Sandbox** under **Apps & Credentials**. Use the client ID and secret from the Sandbox app associated with the test seller. Use an existing **completed Sandbox capture ID** from that seller. If you don't have one, complete a [test checkout](https://developer.paypal.com/studio/checkout/standard/getstarted) using Sandbox buyer and seller accounts. If you only have an order ID, get the capture ID from the order's `purchase_units[].payments.captures[].id`. An order ID is not a capture ID.
+1. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/), select **Sandbox** under **Apps & Credentials**. Use the client ID and secret from the Sandbox app associated with the test seller. Use a completed Sandbox capture ID from that seller, or [create a test capture](#create-a-test-capture). If you already completed a different Sandbox checkout, the capture ID appears in `purchase_units[].payments.captures[].id`. An order ID is not a capture ID.
 2. Use a local PostgreSQL 16+ database and apply [both migrations](../db/README.md). If you need a disposable database and have Docker:
 
    ```sh
@@ -21,6 +21,22 @@ This is a private, single-operator workspace for local testing. It reads existin
 5. Inspect the cited proposals and gaps, accept supported proposals, then download the reviewed ZIP. Reloading a stored case uses its imported snapshots and does not call PayPal again.
 
 You can check just the PayPal connection before setting up PostgreSQL with `npm run paypal:import -- --sandbox "$SANDBOX_CAPTURE_ID"`. A failed lookup never switches to fixture replay.
+
+## Create a test capture
+
+With the Sandbox client ID and secret in `.env.local`, start `npm run dev` on port 3000 if you want the local return page to load. In a second terminal:
+
+```sh
+npm run paypal:checkout -- create
+```
+
+Open the printed `approval_url`. Sign in as a **Sandbox Personal buyer** from [Sandbox Accounts](https://developer.paypal.com/dashboard/accounts/), different from the seller account tied to the app, and approve the USD 10.00 test order. The approval page uses Sandbox funds only. The return page does not capture the order. After approval, pass the printed `order_id` to the capture command:
+
+```sh
+npm run paypal:checkout -- capture YOUR_ORDER_ID
+```
+
+Copy the resulting `capture_id` into the workspace, or preview it with `npm run paypal:import -- --sandbox YOUR_CAPTURE_ID`. Keep the `order_id` for the optional payer lookup. No database is needed for these commands. Repeating capture for a completed helper order returns its existing capture ID.
 
 ## Make a matching test case
 

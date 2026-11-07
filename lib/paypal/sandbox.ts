@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { asRecord, normalizeCapture, PaymentImportError, validateCaptureId } from "./payment.ts";
 
 const origin = "https://api-m.sandbox.paypal.com";
-type SandboxCredentials = { clientId?: string; clientSecret?: string; orderId?: string };
+export type SandboxCredentials = { clientId?: string; clientSecret?: string };
 
 function normalizeDecimal(value: string) {
   const [whole, fraction = ""] = value.split(".");
@@ -61,15 +61,7 @@ async function readJson(
   }
 }
 
-export async function loadSandboxPayment(
-  captureId: string,
-  { clientId, clientSecret, orderId }: SandboxCredentials,
-  fetcher: typeof fetch = fetch,
-) {
-  const id = validateCaptureId(captureId);
-  if (orderId !== undefined && !/^[A-Z0-9]{1,36}$/i.test(orderId)) {
-    throw new PaymentImportError("Supply a valid PayPal Sandbox order ID.");
-  }
+export async function sandboxClient({ clientId, clientSecret }: SandboxCredentials, fetcher: typeof fetch = fetch) {
   if (!clientId?.trim() || !clientSecret?.trim()) {
     throw new PaymentImportError("Set PAYPAL_SANDBOX_CLIENT_ID and PAYPAL_SANDBOX_CLIENT_SECRET.");
   }
@@ -83,19 +75,31 @@ export async function loadSandboxPayment(
   if (typeof token !== "string" || !/^[\x21-\x7E]+$/.test(token)) {
     throw new PaymentImportError("PayPal Sandbox did not return a usable access token.");
   }
-  const capture = await readJson(fetcher, `/v2/payments/captures/${encodeURIComponent(id)}`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-  }, "capture lookup");
+  return (path: string, init: RequestInit, operation: string) => {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    headers.set("Accept", "application/json");
+    return readJson(fetcher, path, { ...init, headers }, operation);
+  };
+}
+
+export async function loadSandboxPayment(
+  captureId: string,
+  { orderId, ...credentials }: SandboxCredentials & { orderId?: string },
+  fetcher: typeof fetch = fetch,
+) {
+  const id = validateCaptureId(captureId);
+  if (orderId !== undefined && !/^[A-Z0-9]{1,36}$/i.test(orderId)) {
+    throw new PaymentImportError("Supply a valid PayPal Sandbox order ID.");
+  }
+  const request = await sandboxClient(credentials, fetcher);
+  const capture = await request(`/v2/payments/captures/${encodeURIComponent(id)}`, { method: "GET" }, "capture lookup");
   const payment = normalizeCapture(capture, id);
   if (!orderId) return payment;
   const linkedOrder = asRecord(asRecord(asRecord(capture).supplementary_data).related_ids).order_id;
   if (typeof linkedOrder === "string" && linkedOrder !== orderId) {
     throw new PaymentImportError("The capture references a different Sandbox order.");
   }
-  const order = await readJson(fetcher, `/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-  }, "order lookup");
+  const order = await request(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" }, "order lookup");
   return { ...payment, payer: payerForCapture(order, orderId, payment) };
 }
