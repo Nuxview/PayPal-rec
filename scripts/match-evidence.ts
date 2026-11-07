@@ -1,10 +1,8 @@
 import { parseArgs } from "node:util";
 import pg from "pg";
-import { DocumentIngestError, loadFixtureDocuments } from "../lib/evidence/documents.ts";
-import { proposeEvidenceMatches } from "../lib/evidence/match.ts";
+import { loadAgencyFixture } from "../lib/evidence/agency-fixture.ts";
+import { DocumentIngestError } from "../lib/evidence/documents.ts";
 import { EvidenceMatchError, matchCaseEvidence } from "../lib/evidence/match-store.ts";
-import { parseRestrictionNotice } from "../lib/evidence/notice.ts";
-import { loadReplayPayment } from "../lib/paypal/replay.ts";
 
 const usage = "Usage: npm run evidence:match -- (--fixture | --case CASE_UUID --merchant MERCHANT_KEY --notice SOURCE_ID --payment SOURCE_ID)";
 
@@ -28,16 +26,8 @@ async function main() {
     if ([caseId, merchantKey, noticeId, paymentId].some((value) => value !== undefined)) {
       throw new EvidenceMatchError(usage);
     }
-    const sources = await loadFixtureDocuments();
-    const notice = sources.find(({ source_kind }) => source_kind === "merchant_provided_simulated_notice");
-    if (!notice) throw new EvidenceMatchError("No simulated notice was found in the fixture.");
-    const result = proposeEvidenceMatches([...sources, {
-      source_id: "SRC-02",
-      source_kind: "paypal_payment_fixture",
-      source_origin: "synthetic_replay",
-      source_content: JSON.stringify(loadReplayPayment()),
-    }], parseRestrictionNotice(notice.source_id, notice.source_content), "SRC-02");
-    console.log(JSON.stringify({ mode: "synthetic_replay", ...result }, null, 2));
+    const { report } = await loadAgencyFixture();
+    console.log(JSON.stringify({ mode: "synthetic_replay", ...report }, null, 2));
     return;
   }
   if (!caseId || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(caseId) ||

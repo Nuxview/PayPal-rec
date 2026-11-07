@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { open } from "node:fs/promises";
-import { basename } from "node:path";
+import { basename, join } from "node:path";
 import manifest from "../../fixtures/restriction-agency-v1/inputs/manifest.json" with { type: "json" };
 
 export const maxDocumentBytes = 256 * 1024;
@@ -121,10 +121,7 @@ export async function loadFixtureDocuments(): Promise<EvidenceDocument[]> {
       throw new DocumentIngestError("The fixture contains an unsupported document kind.");
     }
     validateName(source.path);
-    const path = new URL(
-      `../../fixtures/restriction-agency-v1/inputs/${encodeURIComponent(source.path)}`,
-      import.meta.url,
-    );
+    const path = join(process.cwd(), "fixtures/restriction-agency-v1/inputs", source.path);
     const { text, digest } = await readDocument(path);
     if (digests.has(digest)) throw new DocumentIngestError("The fixture repeats a document under another source ID.");
     digests.add(digest);
