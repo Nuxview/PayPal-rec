@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { loadAgencyFixture } from "../../../lib/evidence/agency-fixture";
 import { buildReviewSnapshot } from "../../../lib/evidence/review-snapshot";
+import { agencyReviewCookie, readReviewDecisions } from "../../../lib/evidence/review-state";
 import { ReviewWorkspace } from "./review-workspace";
 
 export const metadata: Metadata = { title: "Review evidence | PayPal Rec" };
 
-export default async function DemoReview() {
+export default async function DemoReview({ searchParams }: { searchParams: Promise<{ review?: string | string[] }> }) {
   const review = buildReviewSnapshot(await loadAgencyFixture());
+  const [jar, query] = await Promise.all([cookies(), searchParams]);
+  const decisions = readReviewDecisions(jar.get(agencyReviewCookie)?.value ?? null, review);
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 sm:px-8">
       <nav aria-label="Demo navigation" className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 py-5">
@@ -33,7 +37,7 @@ export default async function DemoReview() {
           </div>
         </dl>
       </header>
-      <ReviewWorkspace review={review} />
+      <ReviewWorkspace review={review} decisions={decisions} feedback={query.review} />
     </main>
   );
 }

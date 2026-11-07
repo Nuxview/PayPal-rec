@@ -1,6 +1,6 @@
 export type ReviewDecision = "accepted" | "rejected";
 export type ReviewDecisions = Record<string, ReviewDecision>;
-export const agencyReviewStorageKey = "paypal-rec:agency-review";
+export const agencyReviewCookie = "paypal-rec-agency-review";
 
 export type ReviewTarget = {
   version: string;
