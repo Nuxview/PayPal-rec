@@ -73,3 +73,24 @@ test("a proposal without citations cannot enter the packet", async () => {
   assert.throws(() => buildEvidencePacket(review, { version: review.version, decisions: { [id]: "accepted" } }),
     /missing its citations/);
 });
+
+test("native download forms return the selected ZIP and redirect stale reviews with feedback", async () => {
+  const review = await loadReview();
+  const [proposal] = review.proposals;
+  const selection = writeReviewDecision(null, review, proposal.id, "accepted");
+  const form = (value) => new Request("http://localhost/api/demo/reviewed-packet", {
+    method: "POST",
+    body: new URLSearchParams({ review: value }),
+  });
+  const response = await POST(form(selection));
+  assert.equal(response.status, 200);
+  const archive = unzipSync(new Uint8Array(await response.arrayBuffer()));
+  assert.deepEqual(JSON.parse(strFromU8(archive["reviewed-evidence.json"])).accepted_claims, [proposal]);
+
+  const stale = await POST(form(JSON.stringify({ ...JSON.parse(selection), version: "old" })));
+  assert.equal(stale.status, 303);
+  assert.equal(stale.headers.get("location"), "/demo/review?review=changed");
+  const empty = await POST(form(JSON.stringify({ version: review.version, decisions: {} })));
+  assert.equal(empty.status, 303);
+  assert.equal(empty.headers.get("location"), "/demo/review?review=empty");
+});
