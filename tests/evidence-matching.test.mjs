@@ -73,7 +73,7 @@ test("equal amounts alone do not match; mismatched currencies and capture IDs fa
   const sources = await fixture();
   assert.deepEqual(match(sources.filter(({ source_id }) => source_id !== "SRC-09")).matches, []);
   assert.deepEqual(match(change(sources, "SRC-05", "Total due: USD", "Total due: EUR")).matches, []);
-  assert.deepEqual(match(change(sources, "SRC-05", "800.00\n", "799.99\n")).matches, []);
+  assert.deepEqual(match(change(sources, "SRC-05", "Total due: USD 800.00", "Total due: USD 799.99")).matches, []);
   assert.deepEqual(match(change(sources, "SRC-09", "DEMO-PP-CAPTURE-001", "DEMO-PP-CAPTURE-009")).matches, []);
 });
 
