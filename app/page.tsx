@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-4xl flex-col justify-center px-6 py-16 sm:px-10">
@@ -12,6 +14,9 @@ export default function Home() {
       <p className="mt-8 border-l-2 border-sky-400 pl-4 text-sm text-slate-300">
         The workspace is being built. Case creation and evidence uploads are not available yet.
       </p>
+      <Link href="/demo/payment" className="mt-6 w-fit font-semibold text-sky-300 underline">
+        View the demo payment
+      </Link>
     </main>
   );
 }
