@@ -3,19 +3,22 @@ import { isDeepStrictEqual } from "node:util";
 import { proposeEvidenceMatches } from "./match.ts";
 import { type MatchSource } from "./match-records.ts";
 import { noticeParserVersion, parseRestrictionNotice } from "./notice.ts";
-
-type QueryClient = {
-  query(sql: string, parameters?: string[]): Promise<{ rows: Record<string, unknown>[] }>;
-};
+import { type QueryClient } from "./transaction.ts";
 
 export class EvidenceMatchError extends Error {}
 
-function isMatchSource(row: Record<string, unknown>): row is MatchSource {
+function isMatchSource(row: Record<string, unknown>): row is MatchSource & { source_name: string } {
   return typeof row.source_id === "string" && typeof row.source_kind === "string" &&
-    typeof row.source_origin === "string" && typeof row.source_content === "string";
+    typeof row.source_origin === "string" && typeof row.source_content === "string" && typeof row.source_name === "string";
 }
 
 export async function matchCaseEvidence(
+  client: QueryClient, caseId: string, merchantKey: string, noticeSourceId: string, paymentSourceId: string,
+) {
+  return (await readMatchedCase(client, caseId, merchantKey, noticeSourceId, paymentSourceId)).report;
+}
+
+export async function readMatchedCase(
   client: QueryClient, caseId: string, merchantKey: string, noticeSourceId: string, paymentSourceId: string,
 ) {
   await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
@@ -30,7 +33,7 @@ export async function matchCaseEvidence(
     if (!captured) throw new EvidenceMatchError("Captured notice not found for this merchant and case.");
 
     const { rows } = await client.query(
-      "SELECT source_id, source_kind, source_origin, source_content FROM evidence_sources WHERE case_id = $1",
+      "SELECT source_id, source_kind, source_origin, source_name, source_content FROM evidence_sources WHERE case_id = $1",
       [caseId],
     );
     const sources = rows.filter(isMatchSource);
@@ -57,7 +60,7 @@ export async function matchCaseEvidence(
     }
     const result = proposeEvidenceMatches(sources, notice, paymentSourceId);
     await client.query("COMMIT");
-    return result;
+    return { report: result, sources, notice };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
     throw error;

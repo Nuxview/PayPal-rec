@@ -12,7 +12,7 @@ export default function Home() {
         See what is missing before preparing a response.
       </p>
       <p className="mt-8 border-l-2 border-sky-400 pl-4 text-sm text-slate-300">
-        The workspace is being built. Case creation and evidence uploads are not available yet.
+        Try the synthetic case or import a test capture in the private Sandbox workspace.
       </p>
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Link href="/demo/review" className="rounded-md bg-sky-300 px-4 py-2 font-semibold text-slate-950 hover:bg-sky-200">
@@ -20,6 +20,9 @@ export default function Home() {
         </Link>
         <Link href="/demo/payment" className="font-semibold text-sky-300 underline">
           View the demo payment
+        </Link>
+        <Link href="/sandbox" className="font-semibold text-sky-300 underline">
+          Open Sandbox workspace
         </Link>
       </div>
     </main>

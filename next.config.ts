@@ -10,6 +10,10 @@ const config: NextConfig = {
       "./node_modules/@fontsource/inter/files/inter-latin-400-normal.woff",
       "./node_modules/@fontsource/inter/files/inter-latin-600-normal.woff",
     ],
+    "/sandbox/cases/*/packet": [
+      "./node_modules/@fontsource/inter/files/inter-latin-400-normal.woff",
+      "./node_modules/@fontsource/inter/files/inter-latin-600-normal.woff",
+    ],
   },
 };
 

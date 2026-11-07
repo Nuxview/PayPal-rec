@@ -39,7 +39,7 @@ export function buildEvidencePacket(review: ReviewSnapshot, input: unknown) {
 
   return {
     schema_version: 1,
-    mode: "synthetic_replay",
+    mode: review.mode,
     review_version: review.version,
     capture_id: review.captureId,
     accepted_claims: accepted.map(({ id, request, title, statement, citations }) => ({
