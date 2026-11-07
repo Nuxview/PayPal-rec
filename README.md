@@ -19,7 +19,7 @@ To capture the restriction notice and link its requests to the source text, see 
 
 To propose cited matches for payment and delivery requests, see [Match evidence](docs/evidence-matching.md).
 
-Open [the demo review screen](http://localhost:3000/demo/review) to inspect cited excerpts and accept or reject proposals. See [Review the agency case](docs/merchant-review.md) for the walkthrough.
+Open [the demo review screen](http://localhost:3000/demo/review) to inspect cited excerpts, accept or reject proposals, and download the reviewed PDF and JSON in a ZIP. See [Review the agency case](docs/merchant-review.md) for the walkthrough.
 
 Run the same checks as pull requests targeting `main`:
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { packetFilename } from "../../../lib/evidence/evidence-packet";
 import type { ReviewCitation, ReviewSnapshot } from "../../../lib/evidence/review-snapshot";
 import {
   agencyReviewStorageKey, readReviewDecisions, writeReviewDecision, type ReviewDecision,
@@ -84,6 +85,8 @@ const decisionLabel = { accepted: "Accepted", rejected: "Rejected", pending: "Pe
 export function ReviewWorkspace({ review }: { review: ReviewSnapshot }) {
   const stored = useSyncExternalStore(subscribe, getSavedReview, getServerReview);
   const [temporary, setTemporary] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const decisions = readReviewDecisions(temporary ?? stored, review);
   const counts = review.proposals.reduce((count, { id }) => {
     count[decisions[id] ?? "pending"]++;
@@ -102,6 +105,38 @@ export function ReviewWorkspace({ review }: { review: ReviewSnapshot }) {
     }
   }
 
+  async function downloadPacket() {
+    const selection = temporary ?? getSavedReview();
+    if (!selection || downloading) return;
+    setDownloading(true);
+    setExportError(null);
+    try {
+      const response = await fetch("/api/demo/reviewed-packet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: selection,
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const problem = await response.json().catch(() => null);
+        setExportError(typeof problem?.error === "string" ? problem.error : "The packet could not be generated. Try again.");
+        return;
+      }
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = packetFilename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    } catch {
+      setExportError("The download failed. Check your connection and try again.");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
     <>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900/70 p-4">
@@ -114,6 +149,24 @@ export function ReviewWorkspace({ review }: { review: ReviewSnapshot }) {
           <div className="flex items-center gap-1.5"><dt className="text-slate-400">Rejected</dt><dd className="font-semibold tabular-nums text-rose-300">{counts.rejected}</dd></div>
         </dl>
       </div>
+      <section aria-label="Download reviewed packet" className="mb-8 rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="max-w-2xl text-sm text-slate-300">
+            {counts.accepted
+              ? "The ZIP includes a PDF, structured JSON, and a list of open gaps. Nothing is sent to PayPal."
+              : "Accept at least one proposal to download a reviewed packet."}
+          </p>
+          <button
+            type="button"
+            disabled={!counts.accepted || downloading}
+            onClick={downloadPacket}
+            className={`rounded-md bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-200 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300 ${focusStyle}`}
+          >
+            {downloading ? "Preparing packet…" : "Download reviewed packet"}
+          </button>
+        </div>
+        {exportError && <p role="alert" className="mt-3 text-sm text-rose-200">{exportError}</p>}
+      </section>
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <section aria-labelledby="proposals-title" className="min-w-0">
           <h2 id="proposals-title" className="text-xl font-semibold">Proposed matches</h2>
@@ -143,6 +196,7 @@ export function ReviewWorkspace({ review }: { review: ReviewSnapshot }) {
                         <button
                           key={choice}
                           type="button"
+                          disabled={downloading}
                           aria-label={`${label} ${item.title}`}
                           aria-pressed={decision === choice}
                           onClick={() => decide(item.id, choice)}
