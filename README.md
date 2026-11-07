@@ -13,6 +13,8 @@ Open [localhost:3000](http://localhost:3000). [`/api/health`](http://localhost:3
 
 Open [the demo payment](http://localhost:3000/demo/payment) to see the labelled fixture in the app. For Sandbox capture lookup or storage in an existing case, see [Import a PayPal payment](docs/paypal-import.md).
 
+To preview or store the agency documents or your own plain-text evidence, see [Import case documents](docs/document-import.md).
+
 Run the same checks as pull requests targeting `main`:
 
 ```sh
