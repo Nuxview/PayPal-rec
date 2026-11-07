@@ -1,0 +1,5 @@
+Date: 2026-10-26
+From: studio@northline-botanics.example
+To: delivery@cedar-quay.example
+Subject: NL-17 / landing page
+We received the landing page design file (D2) and confirmed our team can access it.

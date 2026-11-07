@@ -1,0 +1,174 @@
+{
+  "fixture_version": 1,
+  "case_id": "DEMO-AGENCY-001",
+  "expected_findings": [
+    {
+      "id": "payment-allocation",
+      "request": "R1",
+      "status": "supported",
+      "transaction_id": "DEMO-PP-CAPTURE-001",
+      "currency": "USD",
+      "total": "2400.00",
+      "invoices": [
+        {
+          "id": "CQD-210",
+          "amount": "1600.00"
+        },
+        {
+          "id": "CQD-211",
+          "amount": "800.00"
+        }
+      ],
+      "rationale": "The invoices add up to the capture; the client identifies the PayPal transaction and both invoices in its allocation email. Matching amounts alone would be insufficient.",
+      "citations": [
+        {
+          "source": "SRC-02",
+          "pointer": "/transaction_id"
+        },
+        {
+          "source": "SRC-02",
+          "pointer": "/amount"
+        },
+        {
+          "source": "SRC-04",
+          "start_line": 1,
+          "end_line": 1
+        },
+        {
+          "source": "SRC-04",
+          "start_line": 6,
+          "end_line": 6
+        },
+        {
+          "source": "SRC-05",
+          "start_line": 1,
+          "end_line": 1
+        },
+        {
+          "source": "SRC-05",
+          "start_line": 5,
+          "end_line": 5
+        },
+        {
+          "source": "SRC-09",
+          "start_line": 6,
+          "end_line": 7
+        }
+      ]
+    },
+    {
+      "id": "payer-name-mismatch",
+      "request": "R2",
+      "status": "review_required",
+      "payer": "Kestrel Grove Finance",
+      "invoice_buyer": "Northline Botanics",
+      "rationale": "Flag that the PayPal payer differs from the invoice buyer. Attribute the explanation to the client: its finance partner paid on its behalf. The supplied email does not independently verify the payer's authority.",
+      "citations": [
+        {
+          "source": "SRC-02",
+          "pointer": "/payer/name"
+        },
+        {
+          "source": "SRC-04",
+          "start_line": 3,
+          "end_line": 3
+        },
+        {
+          "source": "SRC-05",
+          "start_line": 3,
+          "end_line": 3
+        },
+        {
+          "source": "SRC-09",
+          "start_line": 2,
+          "end_line": 2
+        },
+        {
+          "source": "SRC-09",
+          "start_line": 5,
+          "end_line": 7
+        }
+      ]
+    },
+    {
+      "id": "delivery-D1",
+      "request": "R3",
+      "deliverable": "D1",
+      "status": "supported",
+      "citations": [
+        {
+          "source": "SRC-03",
+          "start_line": 4,
+          "end_line": 4
+        },
+        {
+          "source": "SRC-06",
+          "start_line": 2,
+          "end_line": 5
+        }
+      ]
+    },
+    {
+      "id": "delivery-D2",
+      "request": "R3",
+      "deliverable": "D2",
+      "status": "supported",
+      "citations": [
+        {
+          "source": "SRC-03",
+          "start_line": 5,
+          "end_line": 5
+        },
+        {
+          "source": "SRC-07",
+          "start_line": 2,
+          "end_line": 5
+        }
+      ]
+    },
+    {
+      "id": "delivery-D3",
+      "request": "R3",
+      "deliverable": "D3",
+      "status": "missing_evidence",
+      "rationale": "The project log records an internal archive and pending handoff. No supplied record shows Northline Botanics received the kit.",
+      "next_evidence": "Find a handoff confirmation or access record for Northline Botanics and project NL-17.",
+      "citations": [
+        {
+          "source": "SRC-03",
+          "start_line": 6,
+          "end_line": 6
+        },
+        {
+          "source": "SRC-08",
+          "start_line": 1,
+          "end_line": 3
+        }
+      ]
+    },
+    {
+      "id": "unrelated-handoff",
+      "status": "excluded",
+      "excluded_source": "SRC-10",
+      "rationale": "The kit name and date match, but the confirmation belongs to Northline Florals, project NF-28. Do not cite it as proof of delivery or include it in the packet.",
+      "citations": [
+        {
+          "source": "SRC-03",
+          "start_line": 1,
+          "end_line": 3
+        },
+        {
+          "source": "SRC-10",
+          "start_line": 1,
+          "end_line": 6
+        }
+      ]
+    }
+  ],
+  "review_checks": [
+    "R1: report the single payment and both invoices with citations.",
+    "R2: report the mismatch and attribute the finance partner explanation to the client.",
+    "R3: report two supported deliveries; keep D3 open as a missing evidence item.",
+    "Do not include SRC-10 or claim D3 was delivered in the packet."
+  ]
+}

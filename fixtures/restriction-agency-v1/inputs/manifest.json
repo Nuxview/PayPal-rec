@@ -1,0 +1,58 @@
+{
+  "fixture_version": 1,
+  "case_id": "DEMO-AGENCY-001",
+  "merchant": "Cedar Quay Design Studio",
+  "data_mode": "synthetic_replay",
+  "sources": [
+    {
+      "id": "SRC-01",
+      "kind": "merchant_provided_simulated_notice",
+      "path": "notice.txt"
+    },
+    {
+      "id": "SRC-02",
+      "kind": "paypal_payment_fixture",
+      "path": "paypal-payment.json"
+    },
+    {
+      "id": "SRC-03",
+      "kind": "statement_of_work",
+      "path": "statement-of-work.txt"
+    },
+    {
+      "id": "SRC-04",
+      "kind": "invoice",
+      "path": "invoice-CQD-210.txt"
+    },
+    {
+      "id": "SRC-05",
+      "kind": "invoice",
+      "path": "invoice-CQD-211.txt"
+    },
+    {
+      "id": "SRC-06",
+      "kind": "client_correspondence",
+      "path": "mail-20261023.txt"
+    },
+    {
+      "id": "SRC-07",
+      "kind": "client_correspondence",
+      "path": "mail-20261026.txt"
+    },
+    {
+      "id": "SRC-08",
+      "kind": "project_record",
+      "path": "project-log.txt"
+    },
+    {
+      "id": "SRC-09",
+      "kind": "client_correspondence",
+      "path": "mail-20261029.txt"
+    },
+    {
+      "id": "SRC-10",
+      "kind": "project_record",
+      "path": "handoff-20261030.txt"
+    }
+  ]
+}
