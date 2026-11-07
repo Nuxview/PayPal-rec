@@ -1,6 +1,6 @@
 # PayPal Rec
 
-PayPal Rec helps merchants assemble evidence for a PayPal account limitation. The app foundation is in place; case creation, evidence uploads and reconstruction will land in later issues.
+PayPal Rec helps merchants assemble evidence for a PayPal account limitation. The synthetic agency demo shows how to review proposed matches and investigate gaps. Merchant case creation and uploads are not available in the web app yet.
 
 Use Node.js 24 (with `nvm`, run `nvm install` and `nvm use` in this directory).
 
@@ -18,6 +18,8 @@ To preview or store the agency documents or your own plain-text evidence, see [I
 To capture the restriction notice and link its requests to the source text, see [Capture a restriction notice](docs/restriction-notice.md).
 
 To propose cited matches for payment and delivery requests, see [Match evidence](docs/evidence-matching.md).
+
+Open [the demo review screen](http://localhost:3000/demo/review) to inspect cited excerpts and accept or reject proposals. See [Review the agency case](docs/merchant-review.md) for the walkthrough.
 
 Run the same checks as pull requests targeting `main`:
 

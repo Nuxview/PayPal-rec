@@ -14,9 +14,14 @@ export default function Home() {
       <p className="mt-8 border-l-2 border-sky-400 pl-4 text-sm text-slate-300">
         The workspace is being built. Case creation and evidence uploads are not available yet.
       </p>
-      <Link href="/demo/payment" className="mt-6 w-fit font-semibold text-sky-300 underline">
-        View the demo payment
-      </Link>
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <Link href="/demo/review" className="rounded-md bg-sky-300 px-4 py-2 font-semibold text-slate-950 hover:bg-sky-200">
+          Review the demo case
+        </Link>
+        <Link href="/demo/payment" className="font-semibold text-sky-300 underline">
+          View the demo payment
+        </Link>
+      </div>
     </main>
   );
 }
