@@ -1,0 +1,18 @@
+{
+  "source_mode": "synthetic_replay",
+  "transaction_id": "DEMO-PP-CAPTURE-001",
+  "captured_at": "2026-10-22T15:04:00Z",
+  "capture_status": "COMPLETED",
+  "amount": {
+    "value": "2400.00",
+    "currency": "USD"
+  },
+  "payer": {
+    "name": "Kestrel Grove Finance",
+    "email": "payments@kestrel-grove.example"
+  },
+  "payee": {
+    "name": "Cedar Quay Design Studio",
+    "email": "accounts@cedar-quay.example"
+  }
+}

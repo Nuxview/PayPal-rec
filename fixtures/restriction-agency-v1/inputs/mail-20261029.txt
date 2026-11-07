@@ -1,0 +1,7 @@
+Date: 2026-10-29
+From: studio@northline-botanics.example
+To: accounts@cedar-quay.example
+Subject: Payment for NL-17
+Our finance partner, Kestrel Grove Finance, made the payment on our behalf.
+The PayPal transaction reference is DEMO-PP-CAPTURE-001 for USD 2,400.00.
+Please apply that single payment to invoices CQD-210 and CQD-211.

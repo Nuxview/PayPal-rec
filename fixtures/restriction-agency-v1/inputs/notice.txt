@@ -1,0 +1,8 @@
+SIMULATED NOTICE — created for this fixture; never issued by PayPal.
+Case reference: DEMO-AGENCY-001
+Dated: 2026-11-02
+To: Cedar Quay Design Studio
+Payment under review: DEMO-PP-CAPTURE-001, USD 2,400.00
+R1: Provide the invoices or agreement showing what this payment covered.
+R2: Explain the relationship between the payer and the buyer on the invoices.
+R3: Provide proof of delivery for each of the three invoiced services.
