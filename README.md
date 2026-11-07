@@ -11,6 +11,8 @@ npm run dev
 
 Open [localhost:3000](http://localhost:3000). [`/api/health`](http://localhost:3000/api/health) reports whether the app server is responding. The app starts without a database, PayPal credentials or AI configuration. The health route does not check those services.
 
+Open [the demo payment](http://localhost:3000/demo/payment) to see the labelled fixture in the app. For Sandbox capture lookup or storage in an existing case, see [Import a PayPal payment](docs/paypal-import.md).
+
 Run the same checks as pull requests targeting `main`:
 
 ```sh
