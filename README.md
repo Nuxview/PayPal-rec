@@ -15,6 +15,8 @@ Open [the demo payment](http://localhost:3000/demo/payment) to see the labelled 
 
 To preview or store the agency documents or your own plain-text evidence, see [Import case documents](docs/document-import.md).
 
+To capture the restriction notice and link its requests to the source text, see [Capture a restriction notice](docs/restriction-notice.md).
+
 Run the same checks as pull requests targeting `main`:
 
 ```sh

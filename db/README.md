@@ -1,13 +1,14 @@
 # Case and evidence persistence
 
-Run the initial migration against a disposable PostgreSQL 16+ database, then run the database smoke test:
+Run the migrations in order against a disposable PostgreSQL 16+ database, then run the database smoke test:
 
 ```sh
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/001_case_evidence.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/002_restriction_notice.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/tests/001_case_evidence.sql
 ```
 
-The test rolls back its own data. Run the migration once per database. The schema has no dependency on the app framework.
+The test rolls back its own data. Run each migration once per database. The schema has no dependency on the app framework.
 
 | Table | Responsibility |
 | --- | --- |
@@ -15,6 +16,8 @@ The test rolls back its own data. Run the migration once per database. The schem
 | `evidence_sources` | Stores a case-local source ID, origin, kind, display name and the exact text used for citations. |
 | `reconstruction_findings` | Stores each claim or gap, its assessment, and its current merchant review decision. |
 | `finding_citations` | Links a finding to a source in the same case with a one-based inclusive line range or a JSON Pointer. An empty pointer denotes the whole JSON document. |
+| `restriction_notices` | Records a captured notice by its case and source ID, with the snapshot digest and parser version. |
+| `restriction_notice_requests` | Stores explicit requests from one captured notice, with their original source line ranges. |
 
 For the agency demo, use the case label from the [input manifest](../fixtures/restriction-agency-v1/inputs/manifest.json) and assign a database UUID when creating the case. Preserve the manifest's source IDs as case-local keys. Keep its document kinds and record their origin as `synthetic_replay`; a real sandbox capture would use `paypal_sandbox`. Import only the manifest and its listed sources. The evaluation key stays outside the evidence store and is used to check results after reconstruction.
 
