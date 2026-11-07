@@ -35,7 +35,7 @@ test("Sandbox uses OAuth then a read-only capture lookup and preserves the decim
   ]);
   assert.equal(requests[0].options.body, "grant_type=client_credentials");
   assert.equal(requests[0].options.headers.Authorization, "Basic dGVzdC1jbGllbnQ6dGVzdC1zZWNyZXQ=");
-  assert.equal(requests[1].options.headers.Authorization, "Bearer sandbox-token");
+  assert.equal(new Headers(requests[1].options.headers).get("Authorization"), "Bearer sandbox-token");
   assert.ok(requests.every(({ options }) => options.redirect === "error" && options.cache === "no-store"));
   assert.equal(payment.transaction_id, captureId);
   assert.deepEqual(payment.amount, { value: "2400.00", currency: "USD" });
