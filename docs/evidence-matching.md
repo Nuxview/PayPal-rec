@@ -19,4 +19,9 @@ For the stored agency replay, these source IDs are `SRC-01` and `SRC-02`. The st
 
 The matcher supports the explicit text shapes in the agency fixture: a notice naming a capture and amount; a statement of work with a project and client contact; invoices with project, buyer and totals; and correspondence with explicit allocation or receipt wording. It requires the named capture to reconcile exactly, in one currency, to the cited invoices. A proposed delivery also needs the same project, client contact and deliverable in scope, invoice and receipt. A same-named handoff for a different project is not delivery evidence. Synthetic records are never used to support a Sandbox capture.
 
-The report leaves unmatched requests open. It does not decide that a service was delivered merely because it appears in an invoice or project log. Other text formats and ambiguous records may yield no proposals. Payer contradictions, per-deliverable gaps and review decisions belong to the subsequent stages.
+The report separates proposed matches from diagnostics:
+
+- `payer_mismatch` needs review when the capture names a payer different from the buyer on the linked invoices. The agency fixture names Kestrel Grove Finance and Northline Botanics. The client's explanation is quoted and attributed to the client; it does not verify payer authorization. An unnamed payer does not produce a mismatch.
+- `delivery_gap` means no qualifying client receipt was found for an invoiced deliverable in the matched project. For the agency case, D3 remains open. Its internal archive and pending handoff are cited as context only. The report does not conclude that delivery failed.
+
+Each diagnostic has citations and a suggested next piece of evidence. `unmatched_requests` still lists requests with no proposed match, even if there is a diagnostic for them. Other text formats and ambiguous project or payment links may yield no proposals or diagnostics. The command does not make review decisions.
