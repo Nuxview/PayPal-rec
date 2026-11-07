@@ -17,6 +17,8 @@ To preview or store the agency documents or your own plain-text evidence, see [I
 
 To capture the restriction notice and link its requests to the source text, see [Capture a restriction notice](docs/restriction-notice.md).
 
+To propose cited matches for payment and delivery requests, see [Match evidence](docs/evidence-matching.md).
+
 Run the same checks as pull requests targeting `main`:
 
 ```sh
