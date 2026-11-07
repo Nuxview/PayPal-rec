@@ -89,7 +89,7 @@ export function invoiceRecord(source: MatchSource) {
   if (new Set(items.map((item) => item.id)).size !== items.length) return;
   return {
     id: invoice.match[1], project: invoice.match[2], buyer: buyer.match[1],
-    amount, items, citations: [invoice.citation, buyer.citation, total.citation],
+    amount, items, buyerCitation: buyer.citation, citations: [invoice.citation, buyer.citation, total.citation],
   };
 }
 
@@ -115,4 +115,15 @@ export function handoffRecord(source: MatchSource) {
   if (project && receipt) {
     return { project: project.match[1], title: receipt.match[1], citations: [project.citation, receipt.citation] };
   }
+}
+
+export function projectLogContext(source: MatchSource, projectId: string, deliverableId: string) {
+  if (!documentKind(source, "project_record")) return [];
+  const [header, ...body] = sourceLines(source);
+  const project = header && /^Project log:\s*([A-Za-z0-9_-]+)\s*(?:\||$)/i.exec(header.text);
+  if (!project || project[1] !== projectId) return [];
+  const notes = hits(body, /^\d{4}-\d{2}-\d{2}\s*\|\s*(D[1-9][0-9]*)\s*\|\s*(\S.*)$/)
+    .filter(({ match }) => match[1] === deliverableId)
+    .map(({ match, citation }) => ({ text: match[2], citation }));
+  return notes.length ? [{ projectLine: header.citation, notes }] : [];
 }

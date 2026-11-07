@@ -1,4 +1,5 @@
 import { asRecord } from "../paypal/payment.ts";
+import { deliveryGap, payerMismatch, type EvidenceDiagnostic } from "./match-diagnostics.ts";
 import { parseRestrictionNotice } from "./notice.ts";
 import {
   clientMail, handoffRecord, hits, invoiceRecord, money, normalized, sameMoney, scopeRecord,
@@ -36,7 +37,11 @@ function paymentRecord(source: MatchSource | undefined) {
     if (!amount || amount.units <= BigInt(0) || data.capture_status !== "COMPLETED" ||
         typeof data.transaction_id !== "string" || !/^[A-Za-z0-9_-]{1,50}$/.test(data.transaction_id) ||
         data.source_mode !== source.source_origin) return;
-    return { id: data.transaction_id, amount, sourceId: source.source_id, origin: source.source_origin };
+    const payerName = asRecord(data.payer).name;
+    return {
+      id: data.transaction_id, amount, sourceId: source.source_id, origin: source.source_origin,
+      payerName: typeof payerName === "string" && payerName.trim() ? payerName.trim() : null,
+    };
   } catch {
     return;
   }
@@ -75,7 +80,7 @@ function allocationRecords(scope: Scope, payment: Payment, invoices: Invoice[], 
       selected.push(invoice);
     }
     if (selected.reduce((sum, invoice) => sum + invoice.amount.units, BigInt(0)) !== payment.amount.units) return [];
-    return [{ scope, invoices: selected, citations: [...message.citations, ref.citation, allocation.citation] }];
+    return [{ scope, invoices: selected, message, citations: [...message.citations, ref.citation, allocation.citation] }];
   });
 }
 
@@ -91,11 +96,13 @@ function uniqueCitations(citations: MatchCitation[]) {
 export function proposeEvidenceMatches(sources: MatchSource[], notice: Notice, paymentSourceId: string) {
   const matches: ProposedMatch[] = [];
   const exclusions: Exclusion[] = [];
+  const diagnostics: EvidenceDiagnostic[] = [];
   const report = () => ({
     notice_source_id: notice.source_id,
     payment_source_id: paymentSourceId,
     matches,
     exclusions,
+    diagnostics,
     unmatched_requests: notice.requests.filter(({ label }) => !matches.some((match) => match.request_label === label))
       .map(({ label }) => label),
   });
@@ -113,7 +120,8 @@ export function proposeEvidenceMatches(sources: MatchSource[], notice: Notice, p
   const mail = documents.map(clientMail).filter((item): item is Mail => item !== undefined);
   const allocations = scopes.flatMap((scope) => allocationRecords(scope, payment, invoices, mail));
   if (allocations.length !== 1) return report();
-  const [{ scope, invoices: allocated, citations: allocationCitations }] = allocations;
+  const [allocation] = allocations;
+  const { scope, invoices: allocated, citations: allocationCitations } = allocation;
   const paymentRequest = requestFor(notice, /\b(?:invoices?|agreement)\b.*\bpayment\b|\bpayment\b.*\b(?:invoices?|agreement)\b/i);
   const paymentCitations = [
     anchor,
@@ -137,6 +145,15 @@ export function proposeEvidenceMatches(sources: MatchSource[], notice: Notice, p
     });
   }
 
+  const payerRequest = requestFor(notice, /\bpayer\b.*\bbuyer\b|\bbuyer\b.*\bpayer\b/i);
+  if (payerRequest) {
+    const mismatch = payerMismatch(
+      payerRequest, payment, allocated[0].buyer, allocated.map(({ buyerCitation }) => buyerCitation),
+      scope.client, allocation, anchor,
+    );
+    if (mismatch) diagnostics.push(mismatch);
+  }
+
   for (const source of documents) {
     const handoff = handoffRecord(source);
     if (handoff && handoff.project !== scope.project &&
@@ -152,10 +169,12 @@ export function proposeEvidenceMatches(sources: MatchSource[], notice: Notice, p
   const deliveryRequest = requestFor(notice, /\b(?:proof|evidence) of delivery\b/i);
   if (!deliveryRequest) return report();
   const excludedIds = new Set(exclusions.map(({ source_id }) => source_id));
+  const relevantDocuments = documents.filter(({ source_id }) => !excludedIds.has(source_id));
   for (const item of scope.items) {
     const billed = allocated.flatMap((invoice) => invoice.items).filter(({ id }) => id === item.id);
     if (billed.length !== 1 || normalized(billed[0].title) !== normalized(item.title) ||
         !sameMoney(billed[0].amount, item.amount)) continue;
+    let matched = false;
     for (const message of mail.filter((record) => scopeMail(scope, record))) {
       const receipt = hits(message.lines,
         /^We (?:received|confirm receipt of|confirmed receipt of) (?:the )?(.+?) \((D[1-9][0-9]*)\)(?: and (?:could open it|confirmed our team can access it))?\.(?: Thanks\.)?$/i)
@@ -170,7 +189,12 @@ export function proposeEvidenceMatches(sources: MatchSource[], notice: Notice, p
         citations: uniqueCitations([deliveryRequest.citation, scope.projectCitation, scope.clientCitation,
           item.citation, billed[0].citation, ...message.citations, receipt.citation]),
       });
+      matched = true;
       break;
+    }
+    if (!matched) {
+      diagnostics.push(deliveryGap(deliveryRequest, scope.project, scope.projectCitation, item,
+        billed[0].citation, relevantDocuments));
     }
   }
   return report();

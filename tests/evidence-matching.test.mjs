@@ -48,12 +48,15 @@ test("fixture proposes only cited allocation and receipts and explicitly exclude
   assert.deepEqual(report.exclusions.map(({ source_id, reason }) => [source_id, reason]), [
     [key.expected_findings.find(({ status }) => status === "excluded").excluded_source, "different_project"],
   ]);
+  assert.deepEqual(report.diagnostics.map(({ request_label, status, deliverable }) => [request_label, status, deliverable]),
+    key.expected_findings.filter(({ status }) => status === "review_required" || status === "missing_evidence")
+      .map(({ request, status, deliverable }) => [request, status, deliverable]));
   for (const proposal of report.matches) {
     assert.ok(proposal.citations.some(({ source_id }) => source_id === "SRC-01"));
     assert.ok(proposal.citations.some(({ source_id }) => source_id !== "SRC-01"));
     assert.ok(proposal.citations.every(({ source_id }) => source_id !== "SRC-10"));
   }
-  for (const item of [...report.matches, ...report.exclusions]) {
+  for (const item of [...report.matches, ...report.exclusions, ...report.diagnostics]) {
     for (const citation of item.citations) {
       const source = sources.find(({ source_id }) => source_id === citation.source_id);
       assert.ok(source);
@@ -67,6 +70,58 @@ test("fixture proposes only cited allocation and receipts and explicitly exclude
       }
     }
   }
+});
+
+test("payer mismatch cites the actual parties and treats the client's explanation as attributed evidence", async () => {
+  const sources = await fixture();
+  const [payer] = match(sources).diagnostics;
+  assert.equal(payer.kind, "payer_mismatch");
+  assert.equal(payer.status, "review_required");
+  assert.equal(payer.payer, "Kestrel Grove Finance");
+  assert.equal(payer.invoice_buyer, "Northline Botanics");
+  assert.deepEqual(payer.client_explanation, {
+    text: "Our finance partner, Kestrel Grove Finance, made the payment on our behalf.",
+    reported_by: "Northline Botanics",
+    citation: { source_id: "SRC-09", start_line: 5, end_line: 5 },
+  });
+  assert.ok(payer.citations.some((citation) => citation.source_id === "SRC-02" && citation.pointer === "/payer/name"));
+  assert.ok(payer.citations.some((citation) => citation.source_id === "SRC-04" && citation.start_line === 3));
+
+  const wrongExplanation = change(sources, "SRC-09", "Kestrel Grove Finance", "Another company");
+  assert.equal(match(wrongExplanation).diagnostics[0].client_explanation, null);
+  const withPayer = (payer) => sources.map((source) => source.source_id === "SRC-02"
+    ? { ...source, source_content: JSON.stringify({ ...loadReplayPayment(), payer }) }
+    : source);
+  for (const replacement of [null, { name: "northline   botanics" }]) {
+    assert.ok(match(withPayer(replacement)).diagnostics.every(({ kind }) => kind !== "payer_mismatch"));
+  }
+});
+
+test("internal notes and another project's handoff do not close a delivery gap; a matching receipt does", async () => {
+  const sources = await fixture();
+  const report = match(sources);
+  const [gap] = report.diagnostics.filter(({ kind }) => kind === "delivery_gap");
+  assert.equal(gap.deliverable, "D3");
+  assert.equal(gap.status, "missing_evidence");
+  assert.match(gap.statement, /No matching client receipt/);
+  assert.deepEqual(gap.internal_notes.map(({ citation }) => [citation.source_id, citation.start_line]),
+    [["SRC-08", 2], ["SRC-08", 3]]);
+  assert.ok(gap.citations.every(({ source_id }) => source_id !== "SRC-10"));
+  assert.ok(report.matches.every(({ deliverable }) => deliverable !== "D3"));
+
+  const withReceipt = [...sources, {
+    source_id: "TEST-RECEIPT",
+    source_kind: "client_correspondence",
+    source_origin: "synthetic_replay",
+    source_content: [
+      "Date: 2026-10-31", "From: studio@northline-botanics.example", "To: delivery@cedar-quay.example",
+      "Subject: NL-17 / handoff", "We received the social launch kit (D3).",
+    ].join("\n"),
+  }];
+  const updated = match(withReceipt);
+  assert.ok(updated.matches.some(({ deliverable }) => deliverable === "D3"));
+  assert.ok(updated.diagnostics.every(({ deliverable }) => deliverable !== "D3"));
+  assert.deepEqual(updated.exclusions.map(({ source_id }) => source_id), ["SRC-10"]);
 });
 
 test("equal amounts alone do not match; mismatched currencies and capture IDs fail closed", async () => {
