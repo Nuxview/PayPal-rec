@@ -13,6 +13,7 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
+    "demo:rehearse": "node scripts/rehearse-demo.ts",
     "paypal:import": "node --env-file-if-exists=.env.local scripts/import-paypal.ts",
     "paypal:checkout": "node --env-file-if-exists=.env.local scripts/sandbox-checkout.ts",
     "documents:import": "node --env-file-if-exists=.env.local scripts/import-documents.ts",

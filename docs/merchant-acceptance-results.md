@@ -2,7 +2,7 @@
 
 Status: **Owner-run acceptance completed: PASS with a usability follow-up, as reported by the reviewer.** Functional packet checks, PDF inspection, the production build and production HTTP smoke checks also passed on Node.js 26. The strict fresh-reviewer condition remains unverified.
 
-The owner performed the merchant review when a separate reviewer was unavailable. They report project familiarity but no prior familiarity with the demo case. This conversation had previously described expected findings, so this record does not establish a fresh, uncoached discovery of them. The owner's reported result and the engineering evidence are recorded separately; #13 has not been closed or given an unconditional fresh-reviewer PASS.
+The owner performed the merchant review when a separate reviewer was unavailable. They report project familiarity but no prior familiarity with the demo case. This conversation had previously described expected findings, so this record does not establish a fresh, uncoached discovery of them. The owner's reported result and the engineering evidence are recorded separately. GitHub #13 was closed as completed when checked on November 11; that issue state does not establish an unconditional fresh-reviewer PASS.
 
 Scope: [upstream issue #13](https://github.com/shadrackbond/PayPal-rec/issues/13), “Run merchant acceptance testing.” A fresh reviewer must identify the mismatch, find the delivery gap and export the correct packet without coaching. The issue targets November 11, 2026 (Nairobi). Its dependency, [issue #12](https://github.com/shadrackbond/PayPal-rec/issues/12), was closed as completed when checked on November 10.
 
@@ -31,13 +31,29 @@ Reported by Andrew Pierce on November 11, 2026:
 
 Owner-run functional result: **PASS (reviewer-reported)**. The report does not separately name the payer mismatch, D3 gap or unrelated handoff, and the owner's downloaded artifacts were not independently inspected. The engineering assessment below verifies those specific findings and packet contents separately.
 
+### Additional short reviewer session: context and action order
+
+Reported by the owner during issue #14 work. This was a brief session with a reviewer familiar with PayPal limitations and their procedure, with limited technical familiarity. The owner had to explain the scenario, events before the case, parties, agency/client arrangement, expected deliverables and the reviewer's role. At first glance, the request arrangement and order of actions were confusing.
+
+This is useful partial usability feedback, not a comprehensive acceptance result. The reviewer identity, session time, browser, exact decisions and exported packet were not supplied. Discovery of the mismatch, identification of the delivery gap and export correctness were not individually reported. Do not infer a PASS or replace the earlier owner-run record with this session.
+
+| Observation | Result / response |
+| --- | --- |
+| Case context and reviewer role | Needs improvement; owner explanation was required. Added a fixture-based introduction covering the merchant, client, payment, agreed deliverables and draft-review task. |
+| Request arrangement and action sequence | Needs improvement; the initial flow was unclear. Grouped statements and follow-ups under their original requests, added numbered navigation, moved download after review and returned saved decisions to the relevant request. |
+| Comprehensive acceptance | Not established by this short assisted session. The owner plans to seek one or two longer reviewer sessions. |
+
+For the next sessions, give reviewers the revised neutral [task brief](merchant-acceptance-task.md). Ask them to explain the case and their first action after reading the in-app introduction, before providing help. Record any assistance and the observed result for each issue criterion separately. Context describes the setup and expected work; it must not state which evidence conclusions the reviewer should reach.
+
 ### Usability follow-up: citation volume and repetition
 
 The reviewer found the amount of evidence overwhelming at first sight. Record this as a usability improvement, with no functional failure reported in this session. Before implementation, confirm where the repetition was most noticeable; the report does not distinguish the review screen from the exported packet.
 
 Proposed smallest change: group citations by source document and place a brief factual evidence summary ahead of the expandable original excerpts. Preserve every exact source location and keep unresolved findings visible. Do not merge distinct excerpts or remove evidence simply because a source supports multiple claims. Verify that a reviewer can locate the supporting record without reading the full citation list, while every original citation remains accessible.
 
-This follow-up is recorded only; the review UI and packet rendering have not been changed.
+At the end of the #13 acceptance session, this follow-up was recorded only; the review UI and packet rendering had not been changed.
+
+Issue #14 update: the owner clarified that citation overload affects both the review screen and PDF, with the screen more noticeable because the citations were close together, looked similar and took longer to review. Both now group citations by source document under each claim. The PDF gives locations their own column and labels continued groups; every original excerpt and location is retained. Production HTTP checks and PDF inspection verify preservation and decision/export behavior; browser usability confirmation is still pending. See the [rehearsal record](demo-rehearsal.md).
 
 ## Run the session
 

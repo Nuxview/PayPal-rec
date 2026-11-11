@@ -1,0 +1,98 @@
+PAYPAL REC / SYNTHETIC DEMO
+
+
+Reviewed evidence packet
+Draft for merchant review. Nothing has been submitted.
+Capture: DEMO-PP-CAPTURE-001
+
+Accepted claims
+R1 | Payment allocation
+The client allocated PayPal capture DEMO-PP-CAPTURE-001 to CQD-210, CQD-211; the invoice
+totals reconcile.
+ SRC-01 | notice.txt
+ Line 6                6: R1: Provide the invoices or agreement showing what this payment covered.
+ Line 5                5: Payment under review: DEMO-PP-CAPTURE-001, USD 2,400.00
+
+ SRC-02 | paypal-payment.json
+ /transaction_id       "DEMO-PP-CAPTURE-001"
+ /amount               {
+                           "value": "2400.00",
+                           "currency": "USD"
+                       }
+ /capture_status       "COMPLETED"
+
+ SRC-03 | statement-of-work.txt
+ Line 1                1: Statement of work: NL-17 | dated 2026-10-15
+ Line 3                3: Client: Northline Botanics | contact: studio@northline-botanics.example
+
+ SRC-04 | invoice-CQD-210.txt
+ Line 1                1: Invoice CQD-210 | project NL-17 | issued 2026-10-20
+ Line 3                3: Bill to: Northline Botanics
+ Line 6                6: Total due: USD 1,600.00
+
+ SRC-05 | invoice-CQD-211.txt
+ Line 1                1: Invoice CQD-211 | project NL-17 | issued 2026-10-20
+ Line 3                3: Bill to: Northline Botanics
+ Line 5                5: Total due: USD 800.00
+
+ SRC-09 | mail-20261029.txt
+ Line 2                2: From: studio@northline-botanics.example
+ Line 4                4: Subject: Payment for NL-17
+ Line 6                6: The PayPal transaction reference is DEMO-PP-CAPTURE-001 for USD 2,400.00.
+ Line 7                7: Please apply that single payment to invoices CQD-210 and CQD-211.
+
+
+
+
+PAYPAL REC / SYNTHETIC DEMO                                                                           Page 1 of 2
+R3 | D1 · Delivery receipt
+The client contact acknowledged receipt of Brand guidelines PDF (D1).
+ SRC-01 | notice.txt
+ Line 8                8: R3: Provide proof of delivery for each of the three invoiced services.
+
+ SRC-03 | statement-of-work.txt
+ Line 1                1: Statement of work: NL-17 | dated 2026-10-15
+ Line 3                3: Client: Northline Botanics | contact: studio@northline-botanics.example
+ Line 4                4: D1 — Brand guidelines PDF | USD 900.00 | due 2026-10-23
+
+ SRC-04 | invoice-CQD-210.txt
+ Line 4                4: D1 — Brand guidelines PDF | USD 900.00
+
+ SRC-06 | mail-20261023.txt
+ Line 2                2: From: studio@northline-botanics.example
+ Line 4                4: Subject: NL-17 / brand guidelines
+ Line 5                5: We received the brand guidelines PDF (D1) and could open it. Thanks.
+
+
+R3 | D2 · Delivery receipt
+The client contact acknowledged receipt of Landing page design file (D2).
+ SRC-01 | notice.txt
+ Line 8                8: R3: Provide proof of delivery for each of the three invoiced services.
+
+ SRC-03 | statement-of-work.txt
+ Line 1                1: Statement of work: NL-17 | dated 2026-10-15
+ Line 3                3: Client: Northline Botanics | contact: studio@northline-botanics.example
+ Line 5                5: D2 — Landing page design file | USD 700.00 | due 2026-10-26
+
+ SRC-04 | invoice-CQD-210.txt
+ Line 5                5: D2 — Landing page design file | USD 700.00
+
+ SRC-07 | mail-20261026.txt
+ Line 2                2: From: studio@northline-botanics.example
+ Line 4                4: Subject: NL-17 / landing page
+ Line 5                5: We received the landing page design file (D2) and confirmed our team can access it.
+
+
+
+Open gaps
+R2 | Payer mismatch
+Confirm the payer–buyer relationship and who authorized the payment.
+
+R3 | D3 · Missing delivery evidence
+Find a client acknowledgement or access record for D3 on project NL-17.
+
+
+
+
+PAYPAL REC / SYNTHETIC DEMO                                                                               Page 2 of 2
+

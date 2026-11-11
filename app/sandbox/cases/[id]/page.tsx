@@ -33,7 +33,7 @@ export default async function SandboxCase({ params, searchParams }: {
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-6 sm:px-8">
       <Link href="/sandbox" className="text-sm font-semibold text-sky-300 underline">Sandbox workspace</Link>
-      <header className="py-8">
+      <header id="case-context" className="scroll-mt-6 py-8">
         <p className="inline-block rounded-full border border-sky-300/30 bg-sky-300/10 px-3 py-1 text-xs font-semibold text-sky-200">
           PayPal Sandbox · Test capture
         </p>
@@ -65,7 +65,7 @@ export default async function SandboxCase({ params, searchParams }: {
           ) : <p className="mt-3 text-sm text-slate-300">No explicit requests could be read from the supplied notice.</p>}
         </details>
       </header>
-      <ReviewWorkspace review={review} decisions={decisions} feedback={query.review}
+      <ReviewWorkspace review={review} requests={notice.requests} decisions={decisions} feedback={query.review}
         sandbox={{ caseId: id, save: saveSandboxDecision }} />
     </main>
   );

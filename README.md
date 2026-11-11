@@ -35,3 +35,5 @@ npm run build
 ```
 
 Run `npm start` after building to serve the production build locally. See the [database migration](db/README.md), the [synthetic agency case](fixtures/restriction-agency-v1/README.md) and the [contributor workflow](CONTRIBUTING.md) for the next pieces.
+
+For the demo run order, explicit replay fallback and repeatable production HTTP check (`npm run demo:rehearse`), see the [demo rehearsal](docs/demo-rehearsal.md). Deferred server review history and complete request coverage are tracked in the [packet-trust backlog](docs/packet-trust-backlog.md).

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-11-11T20:07:57.665Z",
+  "runtime": "v26.13.0",
+  "origin": "http://127.0.0.1:42895",
+  "method": "Loopback HTTP, native forms without JavaScript execution; Sandbox failure stubbed",
+  "results": [
+    "Health, home and labelled replay pages; fresh review has no decisions",
+    "Fixture-based case introduction, notice-order request groups, related follow-ups and download after review",
+    "Citations grouped by source; every original location and excerpt remains in server-rendered HTML",
+    "Native accept/reject forms, cookie reload, and ZIP filtering of rejected/pending proposals",
+    "Changed decisions, all-accepted ZIP with open payer/D3 follow-ups, and stale export rejection",
+    "Stubbed Sandbox failure stays an error; explicitly switching to replay still supports review/export"
+  ],
+  "not_checked": [
+    "Browser appearance/interaction",
+    "Independent fresh-reviewer acceptance",
+    "Actual PayPal or standalone PostgreSQL"
+  ]
+}
