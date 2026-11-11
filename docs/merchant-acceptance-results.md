@@ -126,4 +126,4 @@ The owner selected #13 acceptance testing before the packet-trust implementation
 - Review and export must show every known notice request with its original citation and coverage status, including passages needing interpretation. R3 is partially covered while D3 remains open. The current packet lists diagnostics but has no complete request-coverage ledger.
 - Preserve exact, same-currency reconciliation of one capture to explicitly linked invoices. PDF/scan intake and other payment relationships are separate work.
 
-The broader UAT scenarios in `CONTRIBUTING.md`, including changed names/amounts, evidence removal, payer corrections and case deletion, are not established by this record. Record their results separately if they become release criteria.
+The broader release scenarios in `CONTRIBUTING.md`, including changed names and amounts together, payer corrections and an application case-deletion flow, are not established by this record. Evidence removal and stale-approval rejection were checked in the engineering assessment; they were not tested through a browser editing flow. Record the remaining scenarios separately when the corresponding flows exist.

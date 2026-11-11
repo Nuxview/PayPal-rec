@@ -25,3 +25,5 @@ The report separates proposed matches from diagnostics:
 - `delivery_gap` means no qualifying client receipt was found for an invoiced deliverable in the matched project. For the agency case, D3 remains open. Its internal archive and pending handoff are cited as context only. The report does not conclude that delivery failed.
 
 Each diagnostic has citations and a suggested next piece of evidence. `unmatched_requests` still lists requests with no proposed match, even if there is a diagnostic for them. Other text formats and ambiguous project or payment links may yield no proposals or diagnostics. The command does not make review decisions.
+
+`unmatched_requests` is not a coverage assessment: R3 is absent from it because D1 and D2 have proposed receipts, even though D3 is still open. The review shows proposals and diagnostic details; the packet exports accepted claims, omitted-proposal metadata and follow-up summaries. Neither provides the complete request list with statuses such as covered, partially covered or needs interpretation. A complete request-coverage ledger remains future work.
