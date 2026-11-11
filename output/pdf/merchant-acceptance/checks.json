@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-11-10T16:40:36.826Z",
+  "runtime": "v26.13.0",
+  "method": "In-process application route and module checks; informed engineering review, no browser or independent human",
+  "review_version": "29ea9b0bdf4fe0e69c993fbe0c2a325156aeb749e1079561bb1a739bc9faf761",
+  "checks": [
+    {
+      "name": "payer mismatch is attributed and remains open",
+      "result": "PASS"
+    },
+    {
+      "name": "two receipts, D3 gap and unrelated handoff exclusion",
+      "result": "PASS"
+    },
+    {
+      "name": "export contains only server-built accepted statements and open gaps",
+      "result": "PASS"
+    },
+    {
+      "name": "every exported citation resolves to its original snapshot",
+      "result": "PASS"
+    },
+    {
+      "name": "native download form respects accepted, rejected and pending decisions",
+      "result": "PASS"
+    },
+    {
+      "name": "stale review rejected",
+      "result": "PASS"
+    },
+    {
+      "name": "diagnostic cannot be accepted",
+      "result": "PASS"
+    },
+    {
+      "name": "empty acceptance rejected",
+      "result": "PASS"
+    },
+    {
+      "name": "removing supporting evidence changes the conclusion and invalidates approval",
+      "result": "PASS"
+    }
+  ],
+  "archive_sha256": "51e71ba30875a648aeac84e7a0b9b8d17352a51c3a8c1cd15e21bea51f88c18d",
+  "pdf_verification": {
+    "result": "PASS",
+    "pages": 2,
+    "claims": 3,
+    "citations": 33,
+    "method": "Poppler text comparison against exported JSON and visual inspection of both rendered pages",
+    "visual_observation": "Readable text and citations; no visible clipping or overlap; headers and page numbers intact."
+  }
+}

@@ -1,0 +1,428 @@
+{
+  "schema_version": 1,
+  "mode": "synthetic_replay",
+  "review_version": "29ea9b0bdf4fe0e69c993fbe0c2a325156aeb749e1079561bb1a739bc9faf761",
+  "capture_id": "DEMO-PP-CAPTURE-001",
+  "accepted_claims": [
+    {
+      "id": "R1:payment_allocation:DEMO-PP-CAPTURE-001",
+      "request": "R1",
+      "title": "Payment allocation",
+      "statement": "The client allocated PayPal capture DEMO-PP-CAPTURE-001 to CQD-210, CQD-211; the invoice totals reconcile.",
+      "citations": [
+        {
+          "sourceId": "SRC-01",
+          "name": "notice.txt",
+          "location": "Line 6",
+          "lines": [
+            {
+              "number": 6,
+              "text": "R1: Provide the invoices or agreement showing what this payment covered."
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-01",
+          "name": "notice.txt",
+          "location": "Line 5",
+          "lines": [
+            {
+              "number": 5,
+              "text": "Payment under review: DEMO-PP-CAPTURE-001, USD 2,400.00"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-02",
+          "name": "paypal-payment.json",
+          "location": "/transaction_id",
+          "lines": null,
+          "value": "\"DEMO-PP-CAPTURE-001\""
+        },
+        {
+          "sourceId": "SRC-02",
+          "name": "paypal-payment.json",
+          "location": "/amount",
+          "lines": null,
+          "value": "{\n  \"value\": \"2400.00\",\n  \"currency\": \"USD\"\n}"
+        },
+        {
+          "sourceId": "SRC-02",
+          "name": "paypal-payment.json",
+          "location": "/capture_status",
+          "lines": null,
+          "value": "\"COMPLETED\""
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 1",
+          "lines": [
+            {
+              "number": 1,
+              "text": "Statement of work: NL-17 | dated 2026-10-15"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 3",
+          "lines": [
+            {
+              "number": 3,
+              "text": "Client: Northline Botanics | contact: studio@northline-botanics.example"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-04",
+          "name": "invoice-CQD-210.txt",
+          "location": "Line 1",
+          "lines": [
+            {
+              "number": 1,
+              "text": "Invoice CQD-210 | project NL-17 | issued 2026-10-20"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-04",
+          "name": "invoice-CQD-210.txt",
+          "location": "Line 3",
+          "lines": [
+            {
+              "number": 3,
+              "text": "Bill to: Northline Botanics"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-04",
+          "name": "invoice-CQD-210.txt",
+          "location": "Line 6",
+          "lines": [
+            {
+              "number": 6,
+              "text": "Total due: USD 1,600.00"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-05",
+          "name": "invoice-CQD-211.txt",
+          "location": "Line 1",
+          "lines": [
+            {
+              "number": 1,
+              "text": "Invoice CQD-211 | project NL-17 | issued 2026-10-20"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-05",
+          "name": "invoice-CQD-211.txt",
+          "location": "Line 3",
+          "lines": [
+            {
+              "number": 3,
+              "text": "Bill to: Northline Botanics"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-05",
+          "name": "invoice-CQD-211.txt",
+          "location": "Line 5",
+          "lines": [
+            {
+              "number": 5,
+              "text": "Total due: USD 800.00"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-09",
+          "name": "mail-20261029.txt",
+          "location": "Line 2",
+          "lines": [
+            {
+              "number": 2,
+              "text": "From: studio@northline-botanics.example"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-09",
+          "name": "mail-20261029.txt",
+          "location": "Line 4",
+          "lines": [
+            {
+              "number": 4,
+              "text": "Subject: Payment for NL-17"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-09",
+          "name": "mail-20261029.txt",
+          "location": "Line 6",
+          "lines": [
+            {
+              "number": 6,
+              "text": "The PayPal transaction reference is DEMO-PP-CAPTURE-001 for USD 2,400.00."
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-09",
+          "name": "mail-20261029.txt",
+          "location": "Line 7",
+          "lines": [
+            {
+              "number": 7,
+              "text": "Please apply that single payment to invoices CQD-210 and CQD-211."
+            }
+          ],
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "R3:delivery_receipt:D1",
+      "request": "R3",
+      "title": "D1 · Delivery receipt",
+      "statement": "The client contact acknowledged receipt of Brand guidelines PDF (D1).",
+      "citations": [
+        {
+          "sourceId": "SRC-01",
+          "name": "notice.txt",
+          "location": "Line 8",
+          "lines": [
+            {
+              "number": 8,
+              "text": "R3: Provide proof of delivery for each of the three invoiced services."
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 1",
+          "lines": [
+            {
+              "number": 1,
+              "text": "Statement of work: NL-17 | dated 2026-10-15"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 3",
+          "lines": [
+            {
+              "number": 3,
+              "text": "Client: Northline Botanics | contact: studio@northline-botanics.example"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 4",
+          "lines": [
+            {
+              "number": 4,
+              "text": "D1 — Brand guidelines PDF | USD 900.00 | due 2026-10-23"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-04",
+          "name": "invoice-CQD-210.txt",
+          "location": "Line 4",
+          "lines": [
+            {
+              "number": 4,
+              "text": "D1 — Brand guidelines PDF | USD 900.00"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-06",
+          "name": "mail-20261023.txt",
+          "location": "Line 2",
+          "lines": [
+            {
+              "number": 2,
+              "text": "From: studio@northline-botanics.example"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-06",
+          "name": "mail-20261023.txt",
+          "location": "Line 4",
+          "lines": [
+            {
+              "number": 4,
+              "text": "Subject: NL-17 / brand guidelines"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-06",
+          "name": "mail-20261023.txt",
+          "location": "Line 5",
+          "lines": [
+            {
+              "number": 5,
+              "text": "We received the brand guidelines PDF (D1) and could open it. Thanks."
+            }
+          ],
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "R3:delivery_receipt:D2",
+      "request": "R3",
+      "title": "D2 · Delivery receipt",
+      "statement": "The client contact acknowledged receipt of Landing page design file (D2).",
+      "citations": [
+        {
+          "sourceId": "SRC-01",
+          "name": "notice.txt",
+          "location": "Line 8",
+          "lines": [
+            {
+              "number": 8,
+              "text": "R3: Provide proof of delivery for each of the three invoiced services."
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 1",
+          "lines": [
+            {
+              "number": 1,
+              "text": "Statement of work: NL-17 | dated 2026-10-15"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 3",
+          "lines": [
+            {
+              "number": 3,
+              "text": "Client: Northline Botanics | contact: studio@northline-botanics.example"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-03",
+          "name": "statement-of-work.txt",
+          "location": "Line 5",
+          "lines": [
+            {
+              "number": 5,
+              "text": "D2 — Landing page design file | USD 700.00 | due 2026-10-26"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-04",
+          "name": "invoice-CQD-210.txt",
+          "location": "Line 5",
+          "lines": [
+            {
+              "number": 5,
+              "text": "D2 — Landing page design file | USD 700.00"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-07",
+          "name": "mail-20261026.txt",
+          "location": "Line 2",
+          "lines": [
+            {
+              "number": 2,
+              "text": "From: studio@northline-botanics.example"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-07",
+          "name": "mail-20261026.txt",
+          "location": "Line 4",
+          "lines": [
+            {
+              "number": 4,
+              "text": "Subject: NL-17 / landing page"
+            }
+          ],
+          "value": null
+        },
+        {
+          "sourceId": "SRC-07",
+          "name": "mail-20261026.txt",
+          "location": "Line 5",
+          "lines": [
+            {
+              "number": 5,
+              "text": "We received the landing page design file (D2) and confirmed our team can access it."
+            }
+          ],
+          "value": null
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "request": "R2",
+      "title": "Payer mismatch",
+      "status": "review_required",
+      "next_evidence": "Confirm the payer–buyer relationship and who authorized the payment."
+    },
+    {
+      "request": "R3",
+      "title": "D3 · Missing delivery evidence",
+      "status": "missing_evidence",
+      "next_evidence": "Find a client acknowledgement or access record for D3 on project NL-17."
+    }
+  ],
+  "omitted_proposals": []
+}

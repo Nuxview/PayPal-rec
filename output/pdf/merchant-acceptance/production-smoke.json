@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-11-10T17:57:07.981Z",
+  "runtime": "v26.13.0",
+  "method": "Actual production Next.js server over loopback HTTP; native multipart Server Actions and URL-encoded download, no browser automation or independent reviewer",
+  "results": [
+    {
+      "check": "production health",
+      "result": "PASS"
+    },
+    {
+      "check": "GET /",
+      "result": "PASS"
+    },
+    {
+      "check": "GET /demo/payment",
+      "result": "PASS"
+    },
+    {
+      "check": "GET /demo/review",
+      "result": "PASS"
+    },
+    {
+      "check": "production Server Action: accepted",
+      "result": "PASS"
+    },
+    {
+      "check": "production Server Action: rejected",
+      "result": "PASS"
+    },
+    {
+      "check": "reload preserves decisions in demo cookie",
+      "result": "PASS"
+    },
+    {
+      "check": "production HTTP ZIP download honors saved choices and open gaps",
+      "result": "PASS"
+    }
+  ]
+}

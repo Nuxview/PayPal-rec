@@ -2,7 +2,7 @@
 
 PayPal Rec helps merchants assemble evidence for a PayPal account limitation. The synthetic agency demo shows how to review proposed matches and investigate gaps. The private Sandbox workspace imports an existing PayPal test capture and uses documents supplied for that case.
 
-Use Node.js 24 (with `nvm`, run `nvm install` and `nvm use` in this directory).
+Use Node.js 26 (with `nvm`, run `nvm install` and `nvm use` in this directory).
 
 ```sh
 npm ci
