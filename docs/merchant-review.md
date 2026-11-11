@@ -1,5 +1,7 @@
 # Review the agency case
 
+For an uncoached acceptance session, give a fresh reviewer only the [acceptance task](merchant-acceptance-task.md). Coordinators should use the separate [acceptance record](merchant-acceptance-results.md); this walkthrough reveals the expected findings.
+
 Run `npm ci` and `npm run dev`, then open [the review screen](http://localhost:3000/demo/review). It runs the matcher against the synthetic agency inputs. It does not require a database, PayPal credentials or the evaluation answer key.
 
 1. Open **Inspect citations** on a proposed match. Select a citation to see its source name and original line text or JSON field value.
