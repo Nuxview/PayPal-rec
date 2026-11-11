@@ -2,6 +2,8 @@
 
 This is a private, single-operator workspace for local testing. It reads existing captures from PayPal Sandbox and stores them with the test notice and supporting documents you supply. It does not create payments, use live credentials, retrieve account limitations, or submit evidence to PayPal.
 
+The workspace key grants shared access to all Sandbox cases; it does not identify a reviewer or provide separate merchant accounts. Unlock sessions last eight hours. Cases, documents, captures and parsed notice requests are stored in PostgreSQL, while review decisions stay in a case-specific browser cookie for eight hours after saving. Export reads that cookie. Clearing or expiring it returns proposals to pending; decisions have no database history or reviewer audit trail. A changed report or source snapshot requires review again. See [case persistence](../db/README.md) for the schema's current use.
+
 ## Set up locally
 
 1. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/), select **Sandbox** under **Apps & Credentials**. Use the client ID and secret from the Sandbox app associated with the test seller. Use a completed Sandbox capture ID from that seller, or [create a test capture](#create-a-test-capture). If you already completed a different Sandbox checkout, the capture ID appears in `purchase_units[].payments.captures[].id`. An order ID is not a capture ID.
@@ -19,6 +21,8 @@ This is a private, single-operator workspace for local testing. It reads existin
 3. Copy `.env.example` to `.env.local`. Set `PAYPAL_SANDBOX_CLIENT_ID`, `PAYPAL_SANDBOX_CLIENT_SECRET`, and `DATABASE_URL`. Generate a separate `PAYPAL_SANDBOX_WEB_KEY` with `openssl rand -hex 32`. Keep both secrets in your local environment.
 4. Run `npm ci` and `npm run dev -- --hostname 127.0.0.1`. Open [127.0.0.1:3000/sandbox](http://127.0.0.1:3000/sandbox), unlock it with the workspace key, enter your capture ID, and upload the notice and supporting `.txt` files. A linked Checkout order ID is optional; it supplies payer data only if the order contains the same capture and amount.
 5. Inspect the cited proposals and gaps, accept supported proposals, then download the reviewed ZIP. Reloading a stored case uses its imported snapshots and does not call PayPal again.
+
+Each import accepts one notice plus optional supporting documents, up to 25 `.txt` files total, 256 KiB per file and 768 KiB combined. The workspace key must contain at least 24 characters. Case creation stores all imported sources and the notice capture in one transaction; a failed import does not leave a partial case. The UI has no evidence-editing, payer-correction or case-deletion flow.
 
 You can check just the PayPal connection before setting up PostgreSQL with `npm run paypal:import -- --sandbox "$SANDBOX_CAPTURE_ID"`. A failed lookup never switches to fixture replay.
 

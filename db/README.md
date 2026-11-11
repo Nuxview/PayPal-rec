@@ -12,18 +12,20 @@ The test rolls back its own data. Run each migration once per database. The sche
 
 | Table | Responsibility |
 | --- | --- |
-| `reconstruction_cases` | Owns the case UUID and an opaque merchant key assigned by the server. |
+| `reconstruction_cases` | Owns the case UUID and merchant key. The Sandbox workspace uses one fixed server-side key; CLI operators supply the key of an existing case. |
 | `evidence_sources` | Stores a case-local source ID, origin, kind, display name and the exact text used for citations. |
-| `reconstruction_findings` | Stores each claim or gap, its assessment, and its current merchant review decision. |
-| `finding_citations` | Links a finding to a source in the same case with a one-based inclusive line range or a JSON Pointer. An empty pointer denotes the whole JSON document. |
+| `reconstruction_findings` | Schema for a claim or gap, assessment and current review decision. Exercised by the SQL smoke test; application code does not currently populate or read it. |
+| `finding_citations` | Schema for linking a finding to a source in the same case with a one-based inclusive line range or JSON Pointer. An empty pointer denotes the whole JSON document. Exercised by the SQL smoke test; not used by the current application. |
 | `restriction_notices` | Records a captured notice by its case and source ID, with the snapshot digest and parser version. |
 | `restriction_notice_requests` | Stores explicit requests from one captured notice, with their original source line ranges. |
 
-For the agency demo, use the case label from the [input manifest](../fixtures/restriction-agency-v1/inputs/manifest.json) and assign a database UUID when creating the case. Preserve the manifest's source IDs as case-local keys. Keep its document kinds and record their origin as `synthetic_replay`; a real sandbox capture would use `paypal_sandbox`. Import only the manifest and its listed sources. The evaluation key stays outside the evidence store and is used to check results after reconstruction.
+The browser agency demo runs from fixture files without a database. To store a replay through the CLIs, create a case using the label from the [input manifest](../fixtures/restriction-agency-v1/inputs/manifest.json) and assign a database UUID. Preserve the manifest's source IDs and kinds, with origin `synthetic_replay`; a capture retrieved from PayPal Sandbox uses `paypal_sandbox`. The document importer reads the manifest to select its nine text sources; the payment importer owns `SRC-02`. Neither the manifest nor the evaluation key is stored as an evidence source. The evaluation key is used only to check reconstruction results.
+
+The current application recomputes findings and resolves citations from source snapshots. Demo decisions live in a browser cookie for seven days; Sandbox decisions live in a case-specific browser cookie for eight hours. Neither flow records reviewer identity, decision history or decisions in the finding tables. Sandbox exports read that review cookie after checking workspace access. Database-backed review history remains future work.
 
 The composite foreign keys prevent orphaned and cross-case citations even when two cases reuse a source ID such as `SRC-02`. Directly deleting a cited source is blocked; removing a finding also removes its citations.
 
-For an authorized case deletion, run the following in one transaction, passing the case UUID and the authenticated merchant key as parameters. Deferring the source check allows the case's source and finding cascades to finish before PostgreSQL checks the remaining citations.
+The application has no case-deletion route or CLI. For a separately authorized operator deletion, use the following parameterized SQL in one transaction, passing the case UUID and its merchant key. These placeholders must be bound by the database client. Deferring the source check allows the case's source and finding cascades to finish before PostgreSQL checks the remaining citations.
 
 ```sql
 BEGIN;
@@ -32,4 +34,6 @@ DELETE FROM reconstruction_cases WHERE case_id = $1 AND merchant_key = $2;
 COMMIT;
 ```
 
-Assessment and merchant review are separate. Accepting a review records the merchant's decision; it does not turn a gap or excluded document into verified evidence. Before export, later work must enforce the assessment and review rules. Treat cited source content as a snapshot: assign a new source ID to new content, and reset review when editing a finding or changing its citations. The schema checks locator shape; the ingestion and matching code must verify that each location resolves in the cited snapshot. Authenticated reads and writes must also check merchant ownership; foreign keys enforce case consistency, not authorization.
+Assessment and merchant review are separate. The current review queue permits decisions only on proposed matches; gaps and exclusions cannot be accepted into a packet. Export validates the current review version and includes only accepted proposals with resolved citations. Changes to the report or any source snapshot invalidate the saved decisions for that review. This is enforced by application code, not database triggers.
+
+Treat source content as immutable snapshots: importers reject changed content under an existing source ID. The schema checks citation locator shape; the review code also checks that each location resolves to the snapshot. Case ownership is checked in application queries. CLI `--merchant` is an operator-supplied selector, not a login, and the Sandbox uses a shared workspace session. Composite foreign keys enforce case consistency; they do not provide authentication or tenant authorization on their own.
