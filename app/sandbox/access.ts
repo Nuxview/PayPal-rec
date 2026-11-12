@@ -3,6 +3,7 @@ import pg from "pg";
 import { importMongoSandboxCase, listMongoSandboxCases, loadMongoSandboxReview, mongoSandboxCases } from "../../lib/evidence/mongo-sandbox-case";
 import { importSandboxCase, listSandboxCases, loadSandboxReview, type SandboxCaseInput } from "../../lib/evidence/sandbox-case";
 import { hasSandboxSession, sandboxConfig, sandboxSessionCookie } from "../../lib/paypal/sandbox-access";
+import { readReviewerSession, reviewerCookie } from "../../lib/paypal/reviewer-access";
 import type { SandboxCredentials } from "../../lib/paypal/sandbox";
 
 export async function authorizedSandbox() {
@@ -39,4 +40,6 @@ export function sandboxCaseStore(database: NonNullable<ReturnType<typeof sandbox
   };
 }
 
-export const sandboxReviewCookie = (id: string) => `paypal-rec-sandbox-review-${id}`;
+export async function sandboxReviewer(key: string) {
+  return readReviewerSession(key, (await cookies()).get(reviewerCookie)?.value);
+}

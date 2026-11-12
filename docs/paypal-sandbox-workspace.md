@@ -52,19 +52,29 @@ The **Demo case** tab offers a separate, clearly labelled synthetic review witho
 
 `PAYPAL_SANDBOX_WEB_KEY` is a shared access password for this prototype, separate from the PayPal API credentials. The environment value is the server's expected key; entering the same value in the browser proves that you know it. A successful unlock creates an eight-hour browser session granting access to **all** Sandbox cases. You do not supply a different key for each case.
 
-Locking ends the current browser's workspace access; it does not delete stored cases or documents. The key does not identify a reviewer or provide separate merchant accounts. Cases, captures and document snapshots are stored in the configured database. Review decisions remain in a case-specific cookie for eight hours after saving; they have no database history or reviewer audit trail. Clearing or expiring that cookie returns proposals to pending.
+Locking clears the browser's workspace and reviewer sessions. The shared key grants access to the private test workspace. Individual reviewer credentials are required to save decisions, change evidence or remove a MongoDB case. Authorized workspace browsers can view decisions and export current approvals.
+
+## Provision a reviewer
+
+Give each reviewer a unique ID and a separate high-entropy token. Generate 32 random bytes as lowercase hex with `openssl rand -hex 32`. Hash the exact 64-character token with SHA-256, without a trailing newline, and set `SANDBOX_REVIEWERS` to a JSON object such as `{"reviewer-id":"<64-character SHA-256 hex digest>"}`. Send only that reviewer their original token. Replacing or removing their digest invalidates their session. Reviewer sign-in lasts eight hours.
+
+MongoDB records each decision with its reviewer, time, exact statement and citations, and evidence version. Changing or clearing a decision appends to the history. Exports use current server approvals and include the reviewer, time and evidence version in the PDF and JSON. Earlier browser-only Sandbox decisions need to be reviewed again. Local PostgreSQL cases can still be opened for inspection.
 
 ## After reviewing and downloading
 
 Read the PDF and its open follow-ups, then gather missing records or clarify unresolved points. The ZIP is a **review draft**, not an automatic PayPal submission or a guarantee that its contents satisfy PayPal's requested formats. For an actual limitation, the merchant submits the requested original records directly in PayPal, following that case's instructions. Sandbox test records are for practice.
 
-The browser currently cannot append, replace or correct evidence in an existing case. To test more evidence, import a **new case** with the same capture ID, the notice and the complete updated supporting-document set. Reuse unchanged documents and add the new ones. The old case stays intact; decisions do not carry over. Reloading an old case uses its stored snapshots rather than re-fetching PayPal. Case updates and durable review history require separate implementation.
+Open **Update case evidence** to append supporting text files, withdraw a file, replace the notice or verify the payer against a linked PayPal Sandbox order. To replace a supporting document, select the old file for withdrawal and upload the corrected file in the same save. PayPal must confirm the original capture and amount before the payer is updated.
+
+An evidence change keeps the case ID and creates a new review version. Earlier sources, decisions and exported ZIPs are retained in **Case and review history**. The current case is matched again, changed requests are listed and approvals restart as pending. A no-op upload of identical bytes preserves the current version and decisions. Simultaneous changes require the later reviewer to reload.
+
+**Remove case** archives the case after reviewer sign-in and confirmation. Archived cases disappear from Recent cases and their review and export routes. Their stored evidence and audit records are retained for administrators. The private prototype uses one shared workspace, and all individually provisioned reviewers can edit or archive its cases.
 
 ## Supported documents and current limits
 
 Intake accepts one pasted or uploaded notice plus optional supporting documents: **UTF-8 `.txt` only**, up to 25 files including the notice, 256 KiB each and 768 KiB combined. The app does not extract text from PDFs, images or Word documents and has no OCR. The matcher recognizes the specific text formats below; arbitrary text or a generic conversion is not sufficient. Current citations point to the supplied text snapshot, not an original PDF or scan. See [document import](document-import.md).
 
-Case creation stores all sources atomically; a failed import leaves no partial case. The UI has no evidence-editing, payer-correction or case-deletion flow.
+MongoDB case creation and revisions are atomic. Active documents must fit the intake limits. Each case also has a 12 MiB storage ceiling including its history. A save that would exceed that limit is rejected with the previous state intact.
 
 ## Make a matching test case
 
