@@ -1,8 +1,8 @@
 "use server";
 
 import {
-  analyzeEvidenceGaps, buildGapContext, gapAnalysisFailure, geminiConfig, publicGeminiEnabled, type GapAnalysisResult,
-} from "../../../lib/ai/gemini-evidence";
+  analyzeEvidenceGaps, buildGapContext, gapAnalysisFailure, publicEvidenceAIConfig, type GapAnalysisResult,
+} from "../../../lib/ai/evidence-analysis";
 import { loadAgencyFixture } from "../../../lib/evidence/agency-fixture";
 import { parseRestrictionNotice } from "../../../lib/evidence/notice";
 import { buildReviewSnapshot } from "../../../lib/evidence/review-snapshot";
@@ -12,14 +12,14 @@ const retryAfterMs = 30_000;
 let cached: { key: string; until: number; result: Promise<GapAnalysisResult> } | undefined;
 
 export async function analyzeDemoEvidence(version: string): Promise<GapAnalysisResult> {
-  const config = geminiConfig();
-  if (!config || !publicGeminiEnabled()) return { error: "Gemini is not enabled for the public demo." };
+  const config = publicEvidenceAIConfig();
+  if (!config) return { error: "AI analysis is not enabled for the public demo." };
 
   try {
     const fixture = await loadAgencyFixture();
     const review = buildReviewSnapshot(fixture);
     if (version !== review.version) return { error: "The evidence changed. Reload this case and try again." };
-    const key = `${config.model}:${review.version}`;
+    const key = `${config.provider}:${config.model}:${review.version}`;
     if (cached?.key === key && cached.until > Date.now()) return cached.result;
 
     const source = fixture.sources.find(({ source_id }) => source_id === fixture.report.notice_source_id);

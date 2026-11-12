@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { geminiConfig } from "../../../../lib/ai/gemini-evidence";
+import { evidenceAIConfig, evidenceProviderName } from "../../../../lib/ai/evidence-analysis";
 import { caseUuid } from "../../../../lib/evidence/sandbox-case";
 import { readReviewDecisions } from "../../../../lib/evidence/review-state";
 import { Icon, PageHeader } from "../../../ui";
@@ -32,6 +32,7 @@ export default async function SandboxCase({ params, searchParams }: {
     );
   }
   const { review, payment, notice } = data;
+  const aiConfig = evidenceAIConfig();
   const [jar, query] = await Promise.all([cookies(), searchParams]);
   const decisions = readReviewDecisions(jar.get(sandboxReviewCookie(id))?.value ?? null, review);
 
@@ -56,7 +57,7 @@ export default async function SandboxCase({ params, searchParams }: {
           </p>
         )}
       </section>
-      <EvidenceGapAnalysis key={review.version} enabled={Boolean(geminiConfig())} sandbox
+      <EvidenceGapAnalysis key={review.version} providerName={aiConfig ? evidenceProviderName(aiConfig.provider) : null} sandbox
         analyze={analyzeSandboxEvidence.bind(null, id, review.version)} />
       <ReviewWorkspace review={review} requests={notice.requests} decisions={decisions} feedback={query.review}
         sandbox={{ caseId: id, save: saveSandboxDecision }} />

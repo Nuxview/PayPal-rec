@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { publicGeminiEnabled } from "../../../lib/ai/gemini-evidence";
+import { evidenceProviderName, publicEvidenceAIConfig } from "../../../lib/ai/evidence-analysis";
 import { loadAgencyFixture } from "../../../lib/evidence/agency-fixture";
 import { invoiceRecord, scopeRecord } from "../../../lib/evidence/match-records";
 import { parseRestrictionNotice } from "../../../lib/evidence/notice";
@@ -17,6 +17,7 @@ export const metadata: Metadata = { title: "Review evidence | PayPal Rec" };
 export default async function DemoReview({ searchParams }: { searchParams: Promise<{ review?: string | string[] }> }) {
   const fixture = await loadAgencyFixture();
   const review = buildReviewSnapshot(fixture);
+  const aiConfig = publicEvidenceAIConfig();
   const noticeSource = fixture.sources.find(({ source_id }) => source_id === fixture.report.notice_source_id);
   const scopes = fixture.sources.map(scopeRecord).filter((scope) => scope !== undefined);
   const { payer, payee } = fixture.payment;
@@ -61,7 +62,7 @@ export default async function DemoReview({ searchParams }: { searchParams: Promi
         </div>
         <p className="detail-copy mt-4">Background sources: {scope.projectCitation.source_id} · statement of work; {noticeSource.source_id} · simulated notice. Nothing is submitted to PayPal.</p>
       </section>
-      <EvidenceGapAnalysis key={review.version} enabled={publicGeminiEnabled()}
+      <EvidenceGapAnalysis key={review.version} providerName={aiConfig ? evidenceProviderName(aiConfig.provider) : null}
         analyze={analyzeDemoEvidence.bind(null, review.version)} />
       <ReviewWorkspace review={review} requests={notice.requests} decisions={decisions} feedback={query.review} />
     </main>
