@@ -25,12 +25,12 @@ export default async function SandboxCase({ params, searchParams }: {
   const [loaded, reviewer, query, packets] = await Promise.all([
     typeof database === "string"
       ? sandboxCaseStore(database).loadReview(id).then((data) => ({ data, trusted: null })).catch(() => null)
-      : Promise.resolve().then(() => loadMongoSandboxState(mongoSandboxCases(database), id))
+      : mongoSandboxCases(database).then((cases) => loadMongoSandboxState(cases, id))
         .then((trusted) => ({ data: trusted, trusted })).catch(() => null),
     sandboxReviewer(access.key),
     searchParams,
-    typeof database === "string" ? [] : Promise.resolve().then(() =>
-      mongoSandboxPackets(database).find({ caseId: id, merchantKey: sandboxMerchant },
+    typeof database === "string" ? [] : mongoSandboxPackets(database).then((packets) =>
+      packets.find({ caseId: id, merchantKey: sandboxMerchant },
         { projection: { serial: 1, version: 1, exportedAt: 1 } }).sort({ exportedAt: -1 }).limit(20).toArray(),
     ).catch(() => null),
   ]);
