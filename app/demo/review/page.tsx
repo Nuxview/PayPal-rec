@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { publicGeminiEnabled } from "../../../lib/ai/gemini-evidence";
 import { loadAgencyFixture } from "../../../lib/evidence/agency-fixture";
 import { invoiceRecord, scopeRecord } from "../../../lib/evidence/match-records";
 import { parseRestrictionNotice } from "../../../lib/evidence/notice";
 import { buildReviewSnapshot } from "../../../lib/evidence/review-snapshot";
 import { agencyReviewCookie, readReviewDecisions } from "../../../lib/evidence/review-state";
 import { Icon, PageHeader } from "../../ui";
+import { analyzeDemoEvidence } from "./analyze";
+import { EvidenceGapAnalysis } from "./gap-analysis";
 import { ReviewWorkspace } from "./review-workspace";
 
 export const metadata: Metadata = { title: "Review evidence | PayPal Rec" };
@@ -58,6 +61,8 @@ export default async function DemoReview({ searchParams }: { searchParams: Promi
         </div>
         <p className="detail-copy mt-4">Background sources: {scope.projectCitation.source_id} · statement of work; {noticeSource.source_id} · simulated notice. Nothing is submitted to PayPal.</p>
       </section>
+      <EvidenceGapAnalysis key={review.version} enabled={publicGeminiEnabled()}
+        analyze={analyzeDemoEvidence.bind(null, review.version)} />
       <ReviewWorkspace review={review} requests={notice.requests} decisions={decisions} feedback={query.review} />
     </main>
   );

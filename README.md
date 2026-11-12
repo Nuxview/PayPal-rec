@@ -25,7 +25,7 @@ For a browser-only presentation, open **Demo case** or configure the [PayPal San
 
 To host the presentation, see [Deploy to Vercel with MongoDB](docs/vercel-deployment.md). The synthetic demo works without external services. The private Sandbox workspace uses MongoDB on Vercel.
 
-Matching uses deterministic rules for the documented text formats. The Sandbox workspace uses one shared access key; review decisions remain in browser cookies. Database-backed reviewer history, a complete request-coverage ledger and PDF/scan intake are not implemented. See the [documentation audit](docs/documentation-audit.md) for the implementation checks and current limits.
+Matching uses deterministic rules for the documented text formats. The optional [Gemini evidence gap review](docs/gemini-evidence-review.md) reads case excerpts and suggests what evidence to gather next, separately from accepted claims and export. The Sandbox workspace uses one shared access key; review decisions remain in browser cookies. Database-backed reviewer history, a complete request-coverage ledger and PDF/scan intake are not implemented. See the [documentation audit](docs/documentation-audit.md) for the implementation checks and current limits.
 
 Run the same checks as pull requests targeting `main`:
 

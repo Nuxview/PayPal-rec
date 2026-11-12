@@ -81,7 +81,7 @@ export function buildSandboxReview(
     payer: typeof payer.name === "string" && payer.name.trim()
       ? { name: payer.name, email: typeof payer.email === "string" ? payer.email : null } : null,
   };
-  return { review: buildReviewSnapshot({ sources, report, payment }, caseId), payment, notice };
+  return { review: buildReviewSnapshot({ sources, report, payment }, caseId), payment, notice, sources, paymentSourceId };
 }
 
 export async function listSandboxCases(client: QueryClient) {

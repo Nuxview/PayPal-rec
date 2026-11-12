@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { geminiConfig } from "../../../../lib/ai/gemini-evidence";
 import { caseUuid } from "../../../../lib/evidence/sandbox-case";
 import { readReviewDecisions } from "../../../../lib/evidence/review-state";
 import { Icon, PageHeader } from "../../../ui";
+import { EvidenceGapAnalysis } from "../../../demo/review/gap-analysis";
 import { ReviewWorkspace } from "../../../demo/review/review-workspace";
 import { authorizedSandbox, sandboxCaseStore, sandboxReviewCookie } from "../../access";
+import { analyzeSandboxEvidence } from "../../analyze";
 import { saveSandboxDecision } from "../../actions";
 
 export const metadata = { title: "Review Sandbox evidence | PayPal Rec" };
@@ -53,6 +56,8 @@ export default async function SandboxCase({ params, searchParams }: {
           </p>
         )}
       </section>
+      <EvidenceGapAnalysis key={review.version} enabled={Boolean(geminiConfig())} sandbox
+        analyze={analyzeSandboxEvidence.bind(null, id, review.version)} />
       <ReviewWorkspace review={review} requests={notice.requests} decisions={decisions} feedback={query.review}
         sandbox={{ caseId: id, save: saveSandboxDecision }} />
     </main>

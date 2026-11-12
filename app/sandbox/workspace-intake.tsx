@@ -62,6 +62,10 @@ export function WorkspaceIntake({ resumedOrder }: { resumedOrder: string }) {
   function importCase(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    // An unselected file input contributes an unnamed placeholder. Omit it
+    // before Next serializes the form so a notice-only case can be reviewed.
+    const documents = data.getAll("documents");
+    if (documents.length === 1 && documents[0] instanceof File && !documents[0].name) data.delete("documents");
     const sizes = [...data.values()].flatMap((value) => value instanceof File && value.name ? [value.size] : []);
     const noticeText = data.get("noticeText");
     if (typeof noticeText === "string") sizes.push(new TextEncoder().encode(noticeText).byteLength);
