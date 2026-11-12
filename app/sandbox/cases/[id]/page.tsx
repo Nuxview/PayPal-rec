@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { caseUuid, loadSandboxReview } from "../../../../lib/evidence/sandbox-case";
+import { caseUuid } from "../../../../lib/evidence/sandbox-case";
 import { readReviewDecisions } from "../../../../lib/evidence/review-state";
 import { Icon, PageHeader } from "../../../ui";
 import { ReviewWorkspace } from "../../../demo/review/review-workspace";
-import { authorizedSandbox, sandboxReviewCookie, withSandboxDatabase } from "../../access";
+import { authorizedSandbox, sandboxCaseStore, sandboxReviewCookie } from "../../access";
 import { saveSandboxDecision } from "../../actions";
 
 export const metadata = { title: "Review Sandbox evidence | PayPal Rec" };
@@ -17,7 +17,7 @@ export default async function SandboxCase({ params, searchParams }: {
   if (!access) redirect("/sandbox");
   const { id } = await params;
   if (!caseUuid.test(id)) notFound();
-  const data = await withSandboxDatabase(access.database, (client) => loadSandboxReview(client, id)).catch(() => null);
+  const data = await sandboxCaseStore(access.database).loadReview(id).catch(() => null);
   if (!data) {
     return (
       <main id="main" className="shell pb-16">

@@ -5,7 +5,10 @@ export const sandboxSessionSeconds = 8 * 60 * 60;
 
 export function sandboxConfig(env: NodeJS.ProcessEnv = process.env) {
   const key = env.PAYPAL_SANDBOX_WEB_KEY?.trim();
-  const database = env.DATABASE_URL?.trim();
+  const mongoUri = env.MONGODB_URI?.trim();
+  const database = mongoUri
+    ? { uri: mongoUri, name: env.MONGODB_DB?.trim() || "paypal_rec" }
+    : env.DATABASE_URL?.trim();
   const clientId = env.PAYPAL_SANDBOX_CLIENT_ID?.trim();
   const clientSecret = env.PAYPAL_SANDBOX_CLIENT_SECRET?.trim();
   return key && key.length >= 24 && database && clientId && clientSecret

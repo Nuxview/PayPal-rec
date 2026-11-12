@@ -23,6 +23,8 @@ Open [the demo review screen](http://localhost:3000/demo/review) to inspect cite
 
 For a browser-only presentation, open **Demo case** or configure the [PayPal Sandbox workspace](docs/paypal-sandbox-workspace.md) before recording. In Sandbox you can create, approve and capture a test order, add evidence, review cited proposals and download the packet without switching to a terminal.
 
+To host the presentation, see [Deploy to Vercel with MongoDB](docs/vercel-deployment.md). The synthetic demo works without external services. The private Sandbox workspace uses MongoDB on Vercel.
+
 Matching uses deterministic rules for the documented text formats. The Sandbox workspace uses one shared access key; review decisions remain in browser cookies. Database-backed reviewer history, a complete request-coverage ledger and PDF/scan intake are not implemented. See the [documentation audit](docs/documentation-audit.md) for the implementation checks and current limits.
 
 Run the same checks as pull requests targeting `main`:

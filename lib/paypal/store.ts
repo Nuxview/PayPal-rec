@@ -3,6 +3,17 @@ import { type CasePayment, PaymentImportError } from "./payment.ts";
 
 import { inTransaction, type QueryClient } from "../evidence/transaction.ts";
 
+export function paymentSnapshot(payment: CasePayment) {
+  const replay = payment.source_mode === "synthetic_replay";
+  return {
+    source_id: replay ? "SRC-02" : `PAYPAL-CAPTURE-${payment.transaction_id}`,
+    source_kind: replay ? "paypal_payment_fixture" : "paypal_payment_capture",
+    source_name: replay ? "paypal-payment.json" : `paypal-${payment.transaction_id}.json`,
+    source_origin: payment.source_mode,
+    source_content: JSON.stringify(payment, null, 2) + "\n",
+  };
+}
+
 export async function persistPayment(
   client: QueryClient,
   caseId: string,
@@ -18,11 +29,7 @@ export async function persistPaymentInTransaction(
   merchantKey: string,
   payment: CasePayment,
 ) {
-  const replay = payment.source_mode === "synthetic_replay";
-  const sourceId = replay ? "SRC-02" : `PAYPAL-CAPTURE-${payment.transaction_id}`;
-  const kind = replay ? "paypal_payment_fixture" : "paypal_payment_capture";
-  const name = replay ? "paypal-payment.json" : `paypal-${payment.transaction_id}.json`;
-  const content = JSON.stringify(payment, null, 2) + "\n";
+  const { source_id: sourceId, source_kind: kind, source_name: name, source_content: content } = paymentSnapshot(payment);
   const owned = await client.query(
     "SELECT case_id FROM reconstruction_cases WHERE case_id = $1 AND merchant_key = $2 FOR SHARE",
     [caseId, merchantKey],
