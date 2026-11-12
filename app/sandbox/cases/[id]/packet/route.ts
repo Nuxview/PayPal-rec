@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { buildEvidencePacket, PacketError, packetFilename } from "../../../../../lib/evidence/evidence-packet.ts";
 import { createPacketArchive } from "../../../../../lib/evidence/packet-archive.ts";
-import { caseUuid, loadSandboxReview } from "../../../../../lib/evidence/sandbox-case.ts";
-import { authorizedSandbox, sandboxReviewCookie, withSandboxDatabase } from "../../../access";
+import { caseUuid } from "../../../../../lib/evidence/sandbox-case.ts";
+import { authorizedSandbox, sandboxCaseStore, sandboxReviewCookie } from "../../../access";
 
 export const runtime = "nodejs";
 
@@ -15,7 +15,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const { id } = await context.params;
   if (!access || !caseUuid.test(id)) return redirectTo("/sandbox");
   try {
-    const { review } = await withSandboxDatabase(access.database, (client) => loadSandboxReview(client, id));
+    const { review } = await sandboxCaseStore(access.database).loadReview(id);
     const saved = (await cookies()).get(sandboxReviewCookie(id))?.value;
     const packet = buildEvidencePacket(review, saved ? JSON.parse(saved) : { version: review.version, decisions: {} });
     return new Response(new Uint8Array(await createPacketArchive(packet)), {

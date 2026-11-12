@@ -1,5 +1,5 @@
 import { asRecord, normalizeCapture, PaymentImportError } from "../paypal/payment.ts";
-import { loadSandboxPayment } from "../paypal/sandbox.ts";
+import { loadSandboxPayment, type SandboxCredentials } from "../paypal/sandbox.ts";
 import { persistPaymentInTransaction } from "../paypal/store.ts";
 import { persistDocumentsInTransaction } from "./document-store.ts";
 import { type EvidenceDocument } from "./documents.ts";
@@ -11,17 +11,23 @@ import { inTransaction, type QueryClient } from "./transaction.ts";
 export const sandboxMerchant = "paypal-sandbox-workspace";
 export const caseUuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
-export async function importSandboxCase(
-  client: QueryClient,
-  input: { captureId: string; orderId?: string; notice: EvidenceDocument; documents: EvidenceDocument[] },
-  credentials: { clientId: string; clientSecret: string },
-  fetcher: typeof fetch = fetch,
-) {
+export type SandboxCaseInput = { captureId: string; orderId?: string; notice: EvidenceDocument; documents: EvidenceDocument[] };
+
+export function sandboxImportDocuments(input: SandboxCaseInput) {
   const documents = [input.notice, ...input.documents];
   if (documents.some((doc) => doc.source_origin !== "merchant_provided" || doc.source_kind !== "merchant_document")) {
     throw new EvidenceMatchError("Only documents supplied for this Sandbox case can be imported.");
   }
-  // Complete the read-only PayPal lookup before creating any database records.
+  return documents;
+}
+
+export async function importSandboxCase(
+  client: QueryClient,
+  input: SandboxCaseInput,
+  credentials: SandboxCredentials,
+  fetcher: typeof fetch = fetch,
+) {
+  const documents = sandboxImportDocuments(input);
   const payment = await loadSandboxPayment(input.captureId, { ...credentials, orderId: input.orderId }, fetcher);
   return inTransaction(client, "BEGIN", async () => {
     const { rows: [row] } = await client.query(
@@ -52,11 +58,17 @@ export async function loadSandboxReview(client: QueryClient, caseId: string) {
   if (rows.length !== 1 || typeof row.notice_id !== "string" || typeof row.payment_id !== "string") {
     throw new EvidenceMatchError("Sandbox case not found or its sources are ambiguous.");
   }
-  const { sources, report, notice } = await readMatchedCase(client, caseId, sandboxMerchant, row.notice_id, row.payment_id);
-  const source = sources.find(({ source_id }) => source_id === row.payment_id);
+  const evidence = await readMatchedCase(client, caseId, sandboxMerchant, row.notice_id, row.payment_id);
+  return buildSandboxReview(caseId, row.payment_id, evidence);
+}
+
+export function buildSandboxReview(
+  caseId: string, paymentSourceId: string, { sources, report, notice }: Awaited<ReturnType<typeof readMatchedCase>>,
+) {
+  const source = sources.find(({ source_id }) => source_id === paymentSourceId);
   const raw = asRecord(JSON.parse(source?.source_content ?? "{}"));
   if (raw.source_mode !== "paypal_sandbox" || typeof raw.transaction_id !== "string" ||
-    row.payment_id !== `PAYPAL-CAPTURE-${raw.transaction_id}`) {
+    paymentSourceId !== `PAYPAL-CAPTURE-${raw.transaction_id}`) {
     throw new PaymentImportError("The stored Sandbox capture is invalid.");
   }
   const amount = asRecord(raw.amount);
@@ -69,7 +81,7 @@ export async function loadSandboxReview(client: QueryClient, caseId: string) {
     payer: typeof payer.name === "string" && payer.name.trim()
       ? { name: payer.name, email: typeof payer.email === "string" ? payer.email : null } : null,
   };
-  return { review: buildReviewSnapshot({ sources, report, payment }, caseId), payment, notice };
+  return { review: buildReviewSnapshot({ sources, report, payment }, caseId), payment, notice, sources, paymentSourceId };
 }
 
 export async function listSandboxCases(client: QueryClient) {
