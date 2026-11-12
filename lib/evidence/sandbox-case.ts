@@ -64,6 +64,7 @@ export async function loadSandboxReview(client: QueryClient, caseId: string) {
 
 export function buildSandboxReview(
   caseId: string, paymentSourceId: string, { sources, report, notice }: Awaited<ReturnType<typeof readMatchedCase>>,
+  revision?: string,
 ) {
   const source = sources.find(({ source_id }) => source_id === paymentSourceId);
   const raw = asRecord(JSON.parse(source?.source_content ?? "{}"));
@@ -81,7 +82,7 @@ export function buildSandboxReview(
     payer: typeof payer.name === "string" && payer.name.trim()
       ? { name: payer.name, email: typeof payer.email === "string" ? payer.email : null } : null,
   };
-  return { review: buildReviewSnapshot({ sources, report, payment }, caseId), payment, notice, sources, paymentSourceId };
+  return { review: buildReviewSnapshot({ sources, report, payment }, caseId, revision), payment, notice, sources, paymentSourceId };
 }
 
 export async function listSandboxCases(client: QueryClient) {

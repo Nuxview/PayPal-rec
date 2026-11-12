@@ -25,7 +25,7 @@ For a browser-only presentation, open **Demo case** or configure the [PayPal San
 
 To host the presentation, see [Deploy to Vercel with MongoDB](docs/vercel-deployment.md). The synthetic demo works without external services. The private Sandbox workspace uses MongoDB on Vercel.
 
-Matching uses deterministic rules for the documented text formats. The optional [AI evidence gap review](docs/ai-evidence-review.md) reads case excerpts and suggests what evidence to gather next, separately from accepted claims and export. The Sandbox workspace uses one shared access key; review decisions remain in browser cookies. Database-backed reviewer history, a complete request-coverage ledger and PDF/scan intake are not implemented. See the [documentation audit](docs/documentation-audit.md) for the implementation checks and current limits.
+Matching uses deterministic rules for the documented text formats. The optional [AI evidence gap review](docs/ai-evidence-review.md) reads case excerpts and suggests what evidence to gather next, separately from accepted claims and export. A shared key unlocks the private Sandbox workspace. Individual reviewer credentials authorize evidence edits and versioned review decisions stored in MongoDB. The synthetic demo saves decisions in the browser. See the [Sandbox workspace guide](docs/paypal-sandbox-workspace.md) for setup and retention.
 
 Run the same checks as pull requests targeting `main`:
 
@@ -40,7 +40,7 @@ Run `npm start` after building to serve the production build locally. See the [d
 
 For the demo run order, explicit replay fallback and repeatable production HTTP check (`npm run demo:rehearse`), see the [demo rehearsal](docs/demo-rehearsal.md). Deferred server review history and complete request coverage are tracked in the [packet-trust backlog](docs/packet-trust-backlog.md).
 
-The browser Sandbox workspace accepts UTF-8 `.txt` files in the documented formats; it does not convert PDFs, images or Word documents. Its download is a review draft. For an actual limitation, the merchant submits the requested original records directly through PayPal. To test additional evidence in this prototype, import a new case with the complete updated set. See the [Sandbox setup and handoff](docs/paypal-sandbox-workspace.md) and [integration feedback follow-up](docs/sandbox-test-feedback.md).
+The browser Sandbox workspace accepts UTF-8 `.txt` files in the documented formats. Its download is a review draft. For an actual limitation, the merchant submits the requested original records directly through PayPal. Use **Update case evidence** to correct an existing MongoDB case. See the [Sandbox setup and handoff](docs/paypal-sandbox-workspace.md).
 
 ## License
 

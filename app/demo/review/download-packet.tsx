@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { Icon } from "../../ui";
 
-export function DownloadPacket({ path, accepted, selection }: { path: string; accepted: number; selection?: string }) {
+export function DownloadPacket({ path, accepted, selection, version, serial }: {
+  path: string; accepted: number; selection?: string; version?: string; serial?: string;
+}) {
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<{ text: string; error?: boolean }>();
 
@@ -14,7 +16,11 @@ export function DownloadPacket({ path, accepted, selection }: { path: string; ac
     setPending(true);
     setFeedback(undefined);
     try {
-      const response = await fetch(form.action, { method: "POST", body: new URLSearchParams(selection === undefined ? {} : { review: selection }) });
+      const body = new URLSearchParams();
+      for (const [name, value] of new FormData(form)) {
+        if (typeof value === "string") body.append(name, value);
+      }
+      const response = await fetch(form.action, { method: "POST", body });
       if (!response.ok || response.headers.get("content-type") !== "application/zip") {
         const path = new URL(response.url || form.action);
         const status = path.searchParams.get("review");
@@ -44,6 +50,8 @@ export function DownloadPacket({ path, accepted, selection }: { path: string; ac
     <form id="packet-download" method="post" action={path} onSubmit={download} aria-label="Download reviewed packet"
       className="panel scroll-mt-6 space-y-4 p-5 sm:p-6">
       {selection !== undefined && <input type="hidden" name="review" value={selection} />}
+      {version !== undefined && <input type="hidden" name="version" value={version} />}
+      {serial !== undefined && <input type="hidden" name="serial" value={serial} />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="detail-copy max-w-lg">{accepted
           ? "The ZIP includes a PDF and JSON with accepted statements, citations, and open follow-ups. Nothing is sent to PayPal."

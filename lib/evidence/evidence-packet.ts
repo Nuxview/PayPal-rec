@@ -11,12 +11,13 @@ export class PacketError extends Error {
 }
 
 export const packetFilename = "paypal-rec-reviewed-evidence.zip";
+type ClaimApproval = { reviewer: string; reviewed_at: string; evidence_version: string };
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function buildEvidencePacket(review: ReviewSnapshot, input: unknown) {
+export function buildEvidencePacket(review: ReviewSnapshot, input: unknown, approvals?: ReadonlyMap<string, ClaimApproval>) {
   if (!record(input) || typeof input.version !== "string" || !record(input.decisions)) {
     throw new PacketError("Provide a valid review and its decisions.", 400);
   }
@@ -36,6 +37,9 @@ export function buildEvidencePacket(review: ReviewSnapshot, input: unknown) {
   if (accepted.some(({ citations }) => !citations.length)) {
     throw new PacketError("An accepted proposal is missing its citations. Reload and review it again.", 409);
   }
+  if (approvals && accepted.some(({ id }) => approvals.get(id)?.evidence_version !== review.version)) {
+    throw new PacketError("A current reviewer approval is missing.", 409);
+  }
 
   return {
     schema_version: 1,
@@ -43,7 +47,7 @@ export function buildEvidencePacket(review: ReviewSnapshot, input: unknown) {
     review_version: review.version,
     capture_id: review.captureId,
     accepted_claims: accepted.map(({ id, request, title, statement, citations }) => ({
-      id, request, title, statement, citations,
+      id, request, title, statement, citations, ...(approvals ? { approval: approvals.get(id) } : {}),
     })),
     gaps: review.followUp.map(({ request, title, status, nextEvidence }) => ({
       request, title, status, next_evidence: nextEvidence,

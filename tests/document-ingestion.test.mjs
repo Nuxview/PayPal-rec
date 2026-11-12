@@ -5,11 +5,18 @@ import { join } from "node:path";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import {
-  decodeDocument, loadFixtureDocuments, loadMerchantDocuments, maxDocumentBytes,
+  decodeDocument, isSelectedUpload, loadFixtureDocuments, loadMerchantDocuments, maxDocumentBytes,
 } from "../lib/evidence/documents.ts";
 import { persistDocuments } from "../lib/evidence/document-store.ts";
 import { loadReplayPayment } from "../lib/paypal/replay.ts";
 import { persistPayment } from "../lib/paypal/store.ts";
+
+test("empty multipart inputs are omitted while selected files reach validation", () => {
+  assert.equal(isSelectedUpload(new File([], "")), false);
+  assert.equal(isSelectedUpload(new File([], "undefined", { type: "application/octet-stream" })), false);
+  assert.equal(isSelectedUpload(new File([], "empty.txt")), true);
+  assert.equal(isSelectedUpload(new File(["bytes"], "undefined", { type: "application/octet-stream" })), true);
+});
 
 test("fixture uses the original document IDs, source kinds and exact text", async () => {
   const docs = await loadFixtureDocuments();

@@ -53,6 +53,12 @@ function renderPacketPdf(packet: EvidencePacket): Promise<Buffer> {
       doc.font("Strong").fontSize(12).fillColor(ink).text(`${claim.request}  |  ${claim.title}`);
       doc.moveDown(0.3);
       doc.font("Body").fontSize(10.5).fillColor(ink).text(claim.statement, { lineGap: 2 });
+      if (claim.approval) {
+        const { reviewer, reviewed_at, evidence_version } = claim.approval;
+        doc.moveDown(0.25);
+        doc.font("Body").fontSize(8).fillColor(muted).text(`Accepted by ${reviewer} on ${reviewed_at}`);
+        doc.text(`Evidence version ${evidence_version}`);
+      }
       doc.moveDown(0.5);
       for (const [sourceId, citations] of Map.groupBy(claim.citations, ({ sourceId }) => sourceId)) {
         const caption = `${sourceId}  |  ${citations[0].name}`;

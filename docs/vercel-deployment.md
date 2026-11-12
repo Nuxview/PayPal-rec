@@ -12,6 +12,7 @@ Add these server-side environment variables to the Vercel environment you intend
 | `MONGODB_DB` | Database name. Defaults to `paypal_rec`. Use a separate database and credentials for preview deployments that need Sandbox access. |
 | `PAYPAL_SANDBOX_CLIENT_ID`, `PAYPAL_SANDBOX_CLIENT_SECRET` | Credentials from a PayPal Sandbox seller app. |
 | `PAYPAL_SANDBOX_WEB_KEY` | Shared workspace key. Generate it with `openssl rand -hex 32` and give it only to authorized testers. |
+| `SANDBOX_REVIEWERS` | JSON object mapping each reviewer ID to the SHA-256 digest of their individual token. See the [reviewer setup](paypal-sandbox-workspace.md#provision-a-reviewer). |
 | `PAYPAL_SANDBOX_RETURN_ORIGIN` | The public HTTPS origin users actually open for browser checkout, for example `https://paypal-rec.vercel.app`. Use the same origin for the return so the browser can use its workspace session. |
 
 With a manually configured Atlas connection, give the app's database user `readWrite` on the selected database and configure Atlas network access for your Vercel runtime. The Marketplace integration can grant broader database and network access, so use a cluster dedicated to this submission if you choose that integration. Keep URI and credential values out of Git. See [Atlas integration and access behavior](https://www.mongodb.com/docs/atlas/reference/partner-integrations/vercel/).

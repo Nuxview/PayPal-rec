@@ -61,6 +61,12 @@ export function merchantDocument(name: string, bytes: Uint8Array): EvidenceDocum
   };
 }
 
+export function isSelectedUpload(entry: FormDataEntryValue | null): entry is File {
+  // Next's multipart decoder converts an empty file input's missing filename to "undefined".
+  return entry !== null && typeof entry !== "string" && Boolean(entry.name) &&
+    !(entry.name === "undefined" && entry.size === 0 && entry.type === "application/octet-stream");
+}
+
 async function readDocument(path: string | URL) {
   try {
     const handle = await open(path, constants.O_RDONLY | (constants.O_NONBLOCK ?? 0));
