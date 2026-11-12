@@ -1,1 +1,66 @@
 @import "tailwindcss";
+
+@theme {
+  --color-paper: #f5f5ef;
+  --color-ink: #182c25;
+  --color-muted: #4c6157;
+  --color-rule: #dce4da;
+  --color-brand: #1f5a43;
+  --color-leaf: #e7f0e5;
+  --color-warn: #794816;
+  --color-sand: #f9edda;
+  --color-danger: #912e38;
+  --color-blush: #fbecef;
+  --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+}
+
+@layer base {
+  html { color-scheme: light; }
+  body { margin: 0; background: var(--color-paper); color: var(--color-ink); }
+  :where(a, button, summary, input, textarea, select):focus-visible {
+    outline: 3px solid #2b7956;
+    outline-offset: 3px;
+  }
+  :where(h1, h2, h3, p, dd) { overflow-wrap: anywhere; }
+  button:not(:disabled) { cursor: pointer; }
+  summary { cursor: pointer; }
+  input[type=file]::file-selector-button {
+    margin-right: 12px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--color-leaf);
+    color: var(--color-brand);
+    padding: 8px 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .shell { @apply mx-auto w-full max-w-[1280px] px-4 sm:px-8; }
+  .panel { @apply min-w-0 rounded-xl border border-rule bg-white shadow-[0_4px_18px_#253e2b08]; }
+  .eyebrow { @apply text-sm font-semibold tracking-[0.09em] uppercase text-brand; }
+  .page-title { @apply font-display text-4xl leading-tight tracking-tight sm:text-5xl; }
+  .section-title { @apply text-xl font-semibold tracking-tight; }
+  .body-copy { @apply text-base leading-relaxed text-muted; }
+  .detail-copy { @apply text-sm leading-relaxed text-muted; }
+  .button { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold no-underline transition-colors motion-reduce:transition-none; }
+  .button-primary { @apply bg-brand text-white hover:bg-ink; }
+  .button-secondary { @apply bg-leaf text-brand hover:bg-[#d6e8d6]; }
+  .button-quiet { @apply text-brand hover:bg-leaf; }
+  .button:disabled { @apply cursor-not-allowed bg-[#e9ece6] text-muted; }
+  .text-link { @apply font-semibold text-brand underline decoration-brand/45 underline-offset-4 hover:decoration-brand; }
+  .field { @apply w-full rounded-lg border border-[#9caf9f] bg-white px-3 py-2 text-base text-ink placeholder:text-muted; }
+  .field:not(textarea) { @apply min-h-11; }
+  .badge { @apply inline-flex w-fit items-center gap-2 rounded-full bg-leaf px-3 py-1 text-sm font-semibold text-brand; }
+  .badge-warn { @apply bg-sand text-warn; }
+  .badge-neutral { @apply bg-paper text-muted; }
+  .feedback { @apply rounded-lg bg-leaf px-4 py-3 text-sm leading-relaxed text-brand; }
+  .feedback-error { @apply bg-blush text-danger; }
+  .feedback-warn { @apply bg-sand text-warn; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}

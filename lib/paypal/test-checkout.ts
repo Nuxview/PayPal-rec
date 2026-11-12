@@ -4,10 +4,29 @@ import { sandboxClient, type SandboxCredentials } from "./sandbox.ts";
 
 const reference = "PAYPAL_REC_SANDBOX_TEST";
 const testAmount = { currency_code: "USD", value: "10.00" };
-const returnPage = "http://localhost:3000/sandbox/checkout-return";
+const defaultReturnPage = "http://localhost:3000/sandbox/checkout-return";
+const loopback = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+export function checkoutReturnPage(configuredOrigin: string | undefined, requestHost: string | null) {
+  try {
+    const url = configuredOrigin ? new URL(configuredOrigin) : new URL(`http://${requestHost}`);
+    if (url.username || url.password || url.pathname !== "/" || url.search || url.hash ||
+      (!configuredOrigin && !loopback.has(url.hostname)) ||
+      !(url.protocol === "https:" || (url.protocol === "http:" && loopback.has(url.hostname)))) {
+      return null;
+    }
+    return new URL("/sandbox/checkout-return", url).href;
+  } catch {
+    return null;
+  }
+}
+
+export function isTestOrderId(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Z0-9]{1,36}$/.test(value);
+}
 
 function orderId(value: unknown) {
-  if (typeof value !== "string" || !/^[A-Z0-9]{1,36}$/.test(value)) {
+  if (!isTestOrderId(value)) {
     throw new PaymentImportError("Supply a valid PayPal Sandbox order ID.");
   }
   return value;
@@ -49,7 +68,9 @@ function jsonHeaders(requestId: string) {
   return { "Content-Type": "application/json", "PayPal-Request-Id": requestId, Prefer: "return=representation" };
 }
 
-export async function createTestOrder(credentials: SandboxCredentials, fetcher: typeof fetch = fetch) {
+export async function createTestOrder(
+  credentials: SandboxCredentials, fetcher: typeof fetch = fetch, returnPage = defaultReturnPage,
+) {
   const request = await sandboxClient(credentials, fetcher);
   const order = asRecord(await request("/v2/checkout/orders", {
     method: "POST",

@@ -47,17 +47,16 @@ async function main() {
   await page("/");
   const orderId = "4U2394441N253672E";
   const returned = decodeHtml(await page(`/sandbox/checkout-return?token=${orderId}&PayerID=PAYER-TEST-ONLY`));
-  assert.ok(returned.includes(`npm run paypal:checkout -- capture ${orderId}`));
-  assert.ok(returned.includes("Copy <code>capture_id</code>"));
-  assert.ok(returned.includes("Browser review also needs a running PostgreSQL database"));
+  assert.ok(returned.includes(`href="/sandbox?order=${orderId}"`));
+  assert.ok(returned.includes("Continue to capture"));
   assert.ok(!returned.includes("PAYER-TEST-ONLY"));
   for (const query of ["", "?token=%24%28invalid%29", `?token=${orderId}&token=OTHER`]) {
-    assert.ok((await page(`/sandbox/checkout-return${query}`)).includes("capture YOUR_ORDER_ID"));
+    assert.ok((await page(`/sandbox/checkout-return${query}`)).includes("No valid order ID"));
   }
   const cancelled = await page(`/sandbox/checkout-return?token=${orderId}&cancelled=1`);
-  assert.ok(cancelled.includes("cancellation link"));
-  assert.ok(!cancelled.includes(`capture ${orderId}`));
-  results.push("Checkout return exposes the order/capture distinction and validated command; missing, invalid, repeated and cancelled tokens handled without calling PayPal");
+  assert.ok(cancelled.includes("Checkout cancelled"));
+  assert.ok(!cancelled.includes(`href="/sandbox?order=${orderId}"`));
+  results.push("Checkout return links back to browser capture; missing, invalid, repeated and cancelled tokens handled without calling PayPal");
   assert.ok(decodeHtml(await page("/demo/payment")).includes("Fixture replay · simulated payment"));
   let html = await page("/demo/review");
   const selection = () => JSON.parse(inputs(html).find(({ name }) => name === "review")!.value);
@@ -114,13 +113,13 @@ async function main() {
     assert.equal(response.status, 303);
     const target = review.proposals.find((proposal) => proposal.id === id);
     assert.ok(target);
-    assert.equal(response.headers.get("location"), `/demo/review?review=saved#request-${target.request}`);
+    assert.equal(response.headers.get("location"), `/demo/review?review=${decision === "pending" ? "undone" : "saved"}#request-${target.request}`);
     const saved = response.headers.getSetCookie().find((value) => value.startsWith("paypal-rec-agency-review="));
     assert.ok(saved, "Decision cookie missing");
     cookie = saved.split(";")[0];
     await response.body?.cancel();
     html = await page("/demo/review");
-    assert.equal(selection().decisions[id], decision, "Reload must preserve the decision");
+    assert.equal(selection().decisions[id], decision === "pending" ? undefined : decision, "Reload must preserve the decision");
   }
   async function download() {
     const chosen = selection();
@@ -145,6 +144,10 @@ async function main() {
   assert.deepEqual(selection().decisions, { [review.proposals[0].id]: "accepted", [review.proposals[1].id]: "rejected" });
   await download();
   results.push("Native accept/reject forms, cookie reload, and ZIP filtering of rejected/pending proposals");
+  await decide(review.proposals[0].id, "pending");
+  assert.ok(!Object.hasOwn(selection().decisions, review.proposals[0].id));
+  await decide(review.proposals[0].id, "accepted");
+  results.push("Undo removes a saved decision and returns the proposal to pending");
   await decide(review.proposals[1].id, "accepted");
   await decide(review.proposals[2].id, "accepted");
   const { bytes, files } = await download();

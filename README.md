@@ -1,6 +1,6 @@
 # PayPal Rec
 
-PayPal Rec helps merchants assemble evidence for a PayPal account limitation. The synthetic agency demo shows how to review proposed matches and investigate gaps. The private Sandbox workspace imports an existing PayPal test capture and uses documents supplied for that case.
+PayPal Rec helps merchants assemble evidence for a PayPal account limitation. The synthetic agency demo shows how to review proposed matches and investigate gaps. The private Sandbox workspace creates or imports a PayPal test capture and uses documents supplied for that case.
 
 Use Node.js 26 (with `nvm`, run `nvm install` and `nvm use` in this directory). The package engine allows Node.js 24 through 26; `.nvmrc` and CI select 26.
 
@@ -21,7 +21,7 @@ To propose cited matches for payment and delivery requests, see [Match evidence]
 
 Open [the demo review screen](http://localhost:3000/demo/review) to inspect cited excerpts, accept or reject proposals, and download the reviewed PDF and JSON in a ZIP. See [Review the agency case](docs/merchant-review.md) for the walkthrough.
 
-To use your own test capture, configure the [PayPal Sandbox workspace](docs/paypal-sandbox-workspace.md), then open [localhost:3000/sandbox](http://localhost:3000/sandbox).
+For a browser-only presentation, open **Demo case** or configure the [PayPal Sandbox workspace](docs/paypal-sandbox-workspace.md) before recording. In Sandbox you can create, approve and capture a test order, add evidence, review cited proposals and download the packet without switching to a terminal.
 
 Matching uses deterministic rules for the documented text formats. The Sandbox workspace uses one shared access key; review decisions remain in browser cookies. Database-backed reviewer history, a complete request-coverage ledger and PDF/scan intake are not implemented. See the [documentation audit](docs/documentation-audit.md) for the implementation checks and current limits.
 

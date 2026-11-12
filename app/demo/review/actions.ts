@@ -9,7 +9,7 @@ import { agencyReviewCookie, writeReviewDecision } from "../../../lib/evidence/r
 export async function saveDemoDecision(data: FormData) {
   const id = data.get("proposal");
   const decision = data.get("decision");
-  if (typeof id !== "string" || (decision !== "accepted" && decision !== "rejected")) {
+  if (typeof id !== "string" || (decision !== "accepted" && decision !== "rejected" && decision !== "pending")) {
     redirect("/demo/review?review=invalid");
   }
   const review = buildReviewSnapshot(await loadAgencyFixture());
@@ -27,5 +27,5 @@ export async function saveDemoDecision(data: FormData) {
     path: "/demo/review",
     maxAge: 60 * 60 * 24 * 7,
   });
-  redirect(`/demo/review?review=saved#request-${target.request}`);
+  redirect(`/demo/review?review=${decision === "pending" ? "undone" : "saved"}#request-${target.request}`);
 }
