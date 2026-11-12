@@ -18,6 +18,10 @@ With a manually configured Atlas connection, give the app's database user `readW
 
 MongoDB creates the `sandbox_cases` collection on the first successful import. It stores the capture and the immutable evidence together in a single write. With `MONGODB_URI` set, the browser uses MongoDB for all case operations. Existing PostgreSQL cases stay in their original database. You can still access them in a local workspace configured with just `DATABASE_URL`. The database-backed CLI import and matching tools still use PostgreSQL.
 
+## Enable AI evidence analysis
+
+For NVIDIA NIM, add `AI_PROVIDER=nvidia` and `NVIDIA_API_KEY` as server-side variables in the intended Vercel environment, then redeploy. Use `AI_PUBLIC_DEMO=true` only if judges should be able to run AI on the fictional case. See the [provider setup and smoke test](ai-evidence-review.md).
+
 ## Verify the deployed submission
 
 1. Open `/demo/review` in a fresh browser session. Inspect citations, accept a claim, and verify the downloaded ZIP opens as PDF and JSON.
