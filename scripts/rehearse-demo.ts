@@ -45,6 +45,19 @@ async function main() {
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { status: "ok" });
   await page("/");
+  const orderId = "4U2394441N253672E";
+  const returned = decodeHtml(await page(`/sandbox/checkout-return?token=${orderId}&PayerID=PAYER-TEST-ONLY`));
+  assert.ok(returned.includes(`npm run paypal:checkout -- capture ${orderId}`));
+  assert.ok(returned.includes("Copy <code>capture_id</code>"));
+  assert.ok(returned.includes("Browser review also needs a running PostgreSQL database"));
+  assert.ok(!returned.includes("PAYER-TEST-ONLY"));
+  for (const query of ["", "?token=%24%28invalid%29", `?token=${orderId}&token=OTHER`]) {
+    assert.ok((await page(`/sandbox/checkout-return${query}`)).includes("capture YOUR_ORDER_ID"));
+  }
+  const cancelled = await page(`/sandbox/checkout-return?token=${orderId}&cancelled=1`);
+  assert.ok(cancelled.includes("cancellation link"));
+  assert.ok(!cancelled.includes(`capture ${orderId}`));
+  results.push("Checkout return exposes the order/capture distinction and validated command; missing, invalid, repeated and cancelled tokens handled without calling PayPal");
   assert.ok(decodeHtml(await page("/demo/payment")).includes("Fixture replay · simulated payment"));
   let html = await page("/demo/review");
   const selection = () => JSON.parse(inputs(html).find(({ name }) => name === "review")!.value);

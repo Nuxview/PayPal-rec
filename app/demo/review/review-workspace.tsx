@@ -1,4 +1,5 @@
 import type { parseRestrictionNotice } from "../../../lib/evidence/notice";
+import Link from "next/link";
 import type { ReviewCitation, ReviewSnapshot } from "../../../lib/evidence/review-snapshot";
 import type { ReviewDecisions } from "../../../lib/evidence/review-state";
 import { saveDemoDecision } from "./actions";
@@ -203,6 +204,15 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
           </button>
         </div>
       </form>
+      <section aria-labelledby="next-steps-title" className="mt-6 rounded-xl border border-slate-700 p-5">
+        <h2 id="next-steps-title" className="text-xl font-semibold">What happens after download?</h2>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-300">
+          <li>Read the draft and its open follow-ups. Gather missing original records or clarify unresolved points before preparing your response.</li>
+          <li>{sandbox ? "This Sandbox download is a test draft. For an actual limitation, the merchant submits the requested original records directly through PayPal, following that case’s instructions. Sandbox records are for practice; this app does not submit evidence or remove limitations." : "This demo uses fictional records for practice. Nothing is submitted to PayPal."}</li>
+          {sandbox && <li>To test more evidence, import a new case with the same capture, the notice and the complete updated document set. Existing cases cannot be edited in this prototype, and earlier decisions do not carry over.</li>}
+        </ol>
+        {sandbox && <Link href="/sandbox" className="mt-4 inline-block text-sm text-sky-300 underline">Import an updated evidence set as a new case</Link>}
+      </section>
     </>
   );
 }

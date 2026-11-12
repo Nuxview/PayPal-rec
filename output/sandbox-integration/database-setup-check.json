@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-11-12T11:32:34.724415+00:00",
+  "image": "postgres:16",
+  "checks": [
+    {
+      "file": "db/migrations/001_case_evidence.sql",
+      "result": "PASS"
+    },
+    {
+      "file": "db/migrations/002_restriction_notice.sql",
+      "result": "PASS"
+    },
+    {
+      "file": "db/tests/001_case_evidence.sql",
+      "result": "PASS"
+    }
+  ],
+  "startup_readiness_failures": 5,
+  "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+  "smoke_test_rolled_back": true,
+  "temporary_container_removed": true
+}

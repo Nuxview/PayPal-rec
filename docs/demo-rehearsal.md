@@ -32,7 +32,7 @@ The rehearsal command injects a 503 response into the Sandbox adapter and verifi
 
 ## Engineering result - November 11, 2026
 
-The latest production HTTP rehearsal passed at **23:07 EAT (20:07 UTC)** on Node.js **26.13.0**, from base commit `2177bc8` plus this issue branch. The standard Turbopack build was served on temporary loopback port 42895; the server was stopped after verification. This includes the onboarding and request-order changes after the earlier PDF rehearsal at 16:05 EAT. No independent reviewer or browser automation was involved in the engineering check.
+The November 11 production HTTP rehearsal passed at **23:07 EAT (20:07 UTC)** on Node.js **26.13.0**, from base commit `2177bc8` plus this issue branch. The standard Turbopack build was served on temporary loopback port 42895; the server was stopped after verification. This includes the onboarding and request-order changes after the earlier PDF rehearsal at 16:05 EAT. No independent reviewer or browser automation was involved in the engineering check.
 
 | Check | Result |
 | --- | --- |
@@ -57,3 +57,7 @@ The latest production HTTP rehearsal passed at **23:07 EAT (20:07 UTC)** on Node
 Evidence: [HTTP assertions](../output/pdf/demo-rehearsal/checks.json), [reviewed ZIP](../output/pdf/demo-rehearsal/reviewed-evidence.zip), [PDF](../output/pdf/demo-rehearsal/reviewed-evidence.pdf), [JSON](../output/pdf/demo-rehearsal/reviewed-evidence.json) and [extracted PDF text](../output/pdf/demo-rehearsal/reviewed-evidence.txt). These are synthetic engineering artifacts, separate from the owner's #13 download.
 
 The engineering rehearsal establishes functional readiness under the checks above. Before treating the review-screen usability follow-up as accepted, run the browser walkthrough and record the reviewer's result. Keep the upstream issue open until the remaining acceptance evidence is accepted by the owner. Server review history, authenticated attribution and complete request coverage are tracked separately in the [packet-trust backlog](packet-trust-backlog.md).
+
+## Sandbox setup follow-up - November 12
+
+The [Sandbox feedback record](sandbox-test-feedback.md) records the owner's integration findings and subsequent checkout-return, setup, access-key, document-format and handoff guidance changes. A new production HTTP rehearsal at 14:34 EAT passed the existing checks plus return-page order/capture instructions and missing, invalid, repeated and cancelled tokens. The retained HTTP report and draft artifacts now come from this rerun; packet JSON is unchanged. A separate disposable PostgreSQL 16.15 test verified readiness, both migrations and the SQL smoke test. These checks do not replace another real Sandbox checkout or browser usability session.
