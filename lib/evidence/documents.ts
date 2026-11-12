@@ -4,8 +4,9 @@ import { open } from "node:fs/promises";
 import { basename, join } from "node:path";
 import manifest from "../../fixtures/restriction-agency-v1/inputs/manifest.json" with { type: "json" };
 
-export const maxDocumentBytes = 256 * 1024;
-export const maxDocumentBatch = 25;
+import { maxDocumentBatch, maxDocumentBytes } from "./document-limits.ts";
+
+export { maxDocumentBatch, maxDocumentBytes } from "./document-limits.ts";
 
 export class DocumentIngestError extends Error {}
 

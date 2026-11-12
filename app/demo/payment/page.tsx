@@ -1,31 +1,33 @@
 import Link from "next/link";
 import { paymentLabels } from "../../../lib/paypal/payment";
 import { loadReplayPayment } from "../../../lib/paypal/replay";
+import { Icon, PageHeader } from "../../ui";
 
 export default function DemoPayment() {
   const payment = loadReplayPayment();
   const fields = [
     ["Capture ID", payment.transaction_id],
     ["Capture status", payment.capture_status],
-    ["Capture time", payment.captured_at],
+    ["Capture time (UTC)", payment.captured_at],
     ["Payer", payment.payer?.name ?? "Not provided"],
     ["Payee", payment.payee?.name ?? "Not provided"],
   ];
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16 sm:px-10">
-      <Link className="text-sm font-semibold text-sky-300 underline" href="/">PayPal Rec</Link>
-      <h1 className="mt-6 text-4xl font-semibold tracking-tight">Agency case payment</h1>
-      <p className="mt-4 inline-block rounded-full bg-amber-300/15 px-3 py-1 text-sm font-semibold text-amber-200">
-        {paymentLabels[payment.source_mode]}
-      </p>
-      <p className="mt-4 text-slate-300">This record comes from the demo fixture. It was not retrieved from PayPal.</p>
-      <section aria-label="Payment details" className="mt-8 rounded-xl border border-slate-700 p-6">
-        <p className="text-3xl font-semibold tabular-nums">{payment.amount.currency} {payment.amount.value}</p>
-        <dl className="mt-6 divide-y divide-slate-700">
+    <main id="main" className="shell pb-16">
+      <PageHeader label="Synthetic demo · Agency case" title="Agency case payment" action={
+        <Link href="/demo/review" className="button button-primary">Review the evidence <Icon name="arrow" /></Link>
+      }>
+        This payment comes from the fictional agency case. It was not retrieved from PayPal.
+      </PageHeader>
+      <section aria-label="Payment details" className="panel max-w-3xl overflow-hidden">
+        <div className="space-y-3 bg-leaf p-5 sm:p-6">
+          <p className="badge bg-white">{paymentLabels[payment.source_mode]}</p>
+          <p className="font-display text-4xl tracking-tight">{payment.amount.currency} {payment.amount.value}</p>
+        </div>
+        <dl className="divide-y divide-rule px-5 py-2 text-sm sm:px-6">
           {fields.map(([label, value]) => (
-            <div className="grid gap-1 py-3 sm:grid-cols-2" key={label}>
-              <dt className="text-slate-400">{label}</dt>
-              <dd className="break-words">{value}</dd>
+            <div className="grid gap-1 py-4 sm:grid-cols-[12rem_1fr]" key={label}>
+              <dt className="text-muted">{label}</dt><dd className="font-semibold">{value}</dd>
             </div>
           ))}
         </dl>

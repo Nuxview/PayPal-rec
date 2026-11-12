@@ -23,12 +23,12 @@ export function readReviewDecisions(raw: string | null, target: ReviewTarget): R
 }
 
 export function writeReviewDecision(
-  raw: string | null, target: ReviewTarget, id: string, decision: ReviewDecision,
+  raw: string | null, target: ReviewTarget, id: string, decision: ReviewDecision | "pending",
 ): string | null {
   if (!target.proposals.some((proposal) => proposal.id === id) ||
-    (decision !== "accepted" && decision !== "rejected")) return null;
-  return JSON.stringify({
-    version: target.version,
-    decisions: { ...readReviewDecisions(raw, target), [id]: decision },
-  });
+    (decision !== "accepted" && decision !== "rejected" && decision !== "pending")) return null;
+  const decisions = readReviewDecisions(raw, target);
+  if (decision === "pending") delete decisions[id];
+  else decisions[id] = decision;
+  return JSON.stringify({ version: target.version, decisions });
 }

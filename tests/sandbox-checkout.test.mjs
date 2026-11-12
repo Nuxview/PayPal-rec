@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { captureTestOrder, createTestOrder } from "../lib/paypal/test-checkout.ts";
+import { captureTestOrder, checkoutReturnPage, createTestOrder } from "../lib/paypal/test-checkout.ts";
 
 const credentials = { clientId: "sandbox-test", clientSecret: "mock-secret" };
 const id = "4U2394441N253672E";
@@ -41,6 +41,22 @@ test("creates a $10 Sandbox order and returns the approval link without capturin
   assert.deepEqual(order.purchase_units[0].amount, amount);
   assert.equal(order.purchase_units[0].reference_id, unit.reference_id);
   assert.equal(new Headers(mock.requests[1].headers).get("authorization"), "Bearer test-token");
+});
+
+test("browser checkout uses its loopback or configured HTTPS return address, never a public request host", async () => {
+  const route = "/sandbox/checkout-return";
+  assert.equal(checkoutReturnPage(undefined, "127.0.0.1:3030"), `http://127.0.0.1:3030${route}`);
+  assert.equal(checkoutReturnPage(undefined, "untrusted.example"), null);
+  assert.equal(checkoutReturnPage(undefined, "localhost@untrusted.example"), null);
+  assert.equal(checkoutReturnPage("http://rec.example", "localhost"), null);
+  assert.equal(checkoutReturnPage("https://rec.example/elsewhere", "localhost"), null);
+  const returnPage = checkoutReturnPage("https://rec.example", "untrusted.example");
+  assert.equal(returnPage, `https://rec.example${route}`);
+  const { fetcher, requests } = provider();
+  await createTestOrder(credentials, fetcher, returnPage);
+  const context = JSON.parse(requests[1].body).payment_source.paypal.experience_context;
+  assert.equal(context.return_url, returnPage);
+  assert.equal(context.cancel_url, `${returnPage}?cancelled=1`);
 });
 
 test("rejects a live, spoofed, or mismatched approval link", async () => {
