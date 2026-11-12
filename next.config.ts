@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   agentRules: false,
-  serverExternalPackages: ["pdfkit"],
+  serverExternalPackages: ["mongodb", "pdfkit"],
   outputFileTracingIncludes: {
     "/demo/review": ["./fixtures/restriction-agency-v1/inputs/*.txt"],
     "/api/demo/reviewed-packet": [

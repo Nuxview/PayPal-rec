@@ -4,6 +4,8 @@ This private workspace lets you create or look up a Sandbox test payment, add a 
 
 Set up the app before recording. Everything from unlocking the workspace through downloading a packet happens in the browser.
 
+For hosting, follow the [Vercel and MongoDB setup](vercel-deployment.md). For a local MongoDB workspace, set `MONGODB_URI` and optionally `MONGODB_DB` in `.env.local`. Skip steps 3 and 4 and the `DATABASE_URL` setting in step 5.
+
 ## Set up locally
 
 1. Use Node.js 26 from `.nvmrc` and run `npm ci` from the repository root. Create `.env.local` from `.env.example` if it does not already exist; preserve any existing values.
@@ -50,7 +52,7 @@ The **Demo case** tab offers a separate, clearly labelled synthetic review witho
 
 `PAYPAL_SANDBOX_WEB_KEY` is a shared access password for this prototype, separate from the PayPal API credentials. The environment value is the server's expected key; entering the same value in the browser proves that you know it. A successful unlock creates an eight-hour browser session granting access to **all** Sandbox cases. You do not supply a different key for each case.
 
-Locking ends the current browser's workspace access; it does not delete stored cases or documents. The key does not identify a reviewer or provide separate merchant accounts. Cases, documents, captures and parsed requests are stored in PostgreSQL. Review decisions remain in a case-specific cookie for eight hours after saving; they have no database history or reviewer audit trail. Clearing or expiring that cookie returns proposals to pending. See [case persistence](../db/README.md).
+Locking ends the current browser's workspace access; it does not delete stored cases or documents. The key does not identify a reviewer or provide separate merchant accounts. Cases, captures and document snapshots are stored in the configured database. Review decisions remain in a case-specific cookie for eight hours after saving; they have no database history or reviewer audit trail. Clearing or expiring that cookie returns proposals to pending.
 
 ## After reviewing and downloading
 
@@ -62,7 +64,7 @@ The browser currently cannot append, replace or correct evidence in an existing 
 
 Intake accepts one pasted or uploaded notice plus optional supporting documents: **UTF-8 `.txt` only**, up to 25 files including the notice, 256 KiB each and 768 KiB combined. The app does not extract text from PDFs, images or Word documents and has no OCR. The matcher recognizes the specific text formats below; arbitrary text or a generic conversion is not sufficient. Current citations point to the supplied text snapshot, not an original PDF or scan. See [document import](document-import.md).
 
-Case creation stores all sources and notice capture in one transaction; a failed import leaves no partial case. The UI has no evidence-editing, payer-correction or case-deletion flow.
+Case creation stores all sources atomically; a failed import leaves no partial case. The UI has no evidence-editing, payer-correction or case-deletion flow.
 
 ## Make a matching test case
 

@@ -5,13 +5,13 @@ import { redirect } from "next/navigation";
 import { exceedsSandboxUploadLimits, sandboxUploadLimitMessage } from "../../lib/evidence/document-limits";
 import { DocumentIngestError, merchantDocument } from "../../lib/evidence/documents";
 import { EvidenceMatchError } from "../../lib/evidence/match-store";
-import { caseUuid, importSandboxCase, loadSandboxReview } from "../../lib/evidence/sandbox-case";
+import { caseUuid } from "../../lib/evidence/sandbox-case";
 import { writeReviewDecision } from "../../lib/evidence/review-state";
 import { loadSandboxPayment } from "../../lib/paypal/sandbox";
 import { captureTestOrder, checkoutReturnPage, createTestOrder, isTestOrderId } from "../../lib/paypal/test-checkout";
 import { PaymentImportError } from "../../lib/paypal/payment";
 import { openSandboxSession, sandboxConfig, sandboxSessionCookie, sandboxSessionSeconds } from "../../lib/paypal/sandbox-access";
-import { authorizedSandbox, sandboxReviewCookie, withSandboxDatabase } from "./access";
+import { authorizedSandbox, sandboxCaseStore, sandboxReviewCookie } from "./access";
 
 async function secureCookie() {
   return (await headers()).get("x-forwarded-proto")?.split(",")[0].trim() === "https";
@@ -109,17 +109,17 @@ export async function createSandboxCase(data: FormData) {
     }
     const noticeDoc = selected instanceof Uint8Array ? merchantDocument("pasted-notice.txt", selected) : await readUpload(selected);
     const documents = await Promise.all(files.map(readUpload));
-    const id = await withSandboxDatabase(config.database, (client) => importSandboxCase(client, {
+    const id = await sandboxCaseStore(config.database).importCase({
       captureId: capture.trim(),
       orderId: typeof order === "string" ? order.trim() || undefined : undefined,
       notice: noticeDoc,
       documents,
-    }, config));
+    }, config);
     return { id };
   } catch (error) {
     return { error: error instanceof PaymentImportError || error instanceof DocumentIngestError || error instanceof EvidenceMatchError
       ? error.message
-      : "Could not save the case. Check the database connection and migrations, then try again." };
+      : "Could not save the case. Check the workspace database configuration, then try again." };
   }
 }
 
@@ -131,7 +131,7 @@ export async function saveSandboxDecision(data: FormData) {
   const proposal = data.get("proposal");
   const decision = data.get("decision");
   if (typeof proposal !== "string" || (decision !== "accepted" && decision !== "rejected" && decision !== "pending")) redirect(`${path}?review=invalid`);
-  const loaded = await withSandboxDatabase(config.database, (client) => loadSandboxReview(client, id)).catch(() => null);
+  const loaded = await sandboxCaseStore(config.database).loadReview(id).catch(() => null);
   if (!loaded || data.get("version") !== loaded.review.version) redirect(`${path}?review=changed`);
   const jar = await cookies();
   const name = sandboxReviewCookie(id);

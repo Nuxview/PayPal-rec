@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { listSandboxCases } from "../../lib/evidence/sandbox-case";
 import { sandboxConfig } from "../../lib/paypal/sandbox-access";
 import { isTestOrderId } from "../../lib/paypal/test-checkout";
 import { ActionButton } from "../action-button";
 import { Icon, PageHeader } from "../ui";
-import { authorizedSandbox, withSandboxDatabase } from "./access";
+import { authorizedSandbox, sandboxCaseStore } from "./access";
 import { lockSandbox, unlockSandbox } from "./actions";
 import { WorkspaceIntake } from "./workspace-intake";
 
@@ -17,7 +16,7 @@ export default async function SandboxHome({ searchParams }: {
   const order = isTestOrderId(query.order) ? query.order : "";
   const configured = sandboxConfig();
   const access = await authorizedSandbox();
-  const cases = access ? await withSandboxDatabase(access.database, listSandboxCases).catch(() => null) : [];
+  const cases = access ? await sandboxCaseStore(access.database).listCases().catch(() => null) : [];
 
   return (
     <main id="main" className="shell pb-16">
