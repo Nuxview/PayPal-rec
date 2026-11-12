@@ -25,14 +25,16 @@ export default async function SandboxHome({ searchParams }: {
         Retrieve an existing test capture and review it against the case documents you provide.
       </p>
       {!configured ? (
-        <p className="mt-6 rounded-xl border border-slate-700 p-4 text-sm text-slate-300">
-          This workspace is not configured. Follow <code>docs/paypal-sandbox-workspace.md</code> in the repository to set the Sandbox credentials, workspace key and database.
-        </p>
+        <div className="mt-6 space-y-3 rounded-xl border border-slate-700 p-4 text-sm text-slate-300">
+          <p>This workspace needs Sandbox API credentials, a workspace key of at least 24 characters, and <code>DATABASE_URL</code>. Start PostgreSQL and apply both migrations before importing a case. Follow <code>docs/paypal-sandbox-workspace.md</code> in order.</p>
+          <p>Creating and capturing a test order only needs the Sandbox API credentials. You can preview a completed capture without a database using <code>npm run paypal:import -- --sandbox YOUR_CAPTURE_ID</code>.</p>
+        </div>
       ) : !access ? (
         <form action={unlockSandbox} className="mt-7 space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-5">
           <label className="block text-sm font-medium">Workspace key
             <input name="key" type="password" required autoComplete="current-password" className={input} />
           </label>
+          <p className="text-sm leading-relaxed text-slate-300">Enter the value configured as <code>PAYPAL_SANDBOX_WEB_KEY</code> on the server. It unlocks shared access to all Sandbox cases in this browser for eight hours. It is separate from your PayPal credentials and does not identify a reviewer.</p>
           {query.notice === "key" && <p role="alert" className="text-sm text-rose-200">That workspace key did not match.</p>}
           <button className={submit}>Unlock workspace</button>
         </form>
@@ -54,7 +56,7 @@ export default async function SandboxHome({ searchParams }: {
             </label>
             <label className="block text-sm font-medium">Supporting documents (.txt)
               <input name="documents" type="file" accept=".txt,text/plain" multiple className={input} />
-              <span className="mt-1 block text-xs text-slate-400">Include invoices, the statement of work and any client receipts.</span>
+              <span className="mt-1 block text-xs text-slate-400">Use UTF-8 text in the documented invoice, statement-of-work and client-receipt formats. PDF, image and Word conversion is not available. Up to 25 files including the notice, 256 KiB each and 768 KiB combined.</span>
             </label>
             <button className={submit}>Import Sandbox capture and review</button>
           </form>
@@ -70,6 +72,7 @@ export default async function SandboxHome({ searchParams }: {
           )}
           <form action={lockSandbox} className="mt-8">
             <button className="text-sm font-semibold text-slate-300 underline">Lock workspace</button>
+            <p className="mt-2 text-xs text-slate-400">Locking ends this browser’s workspace access. Stored cases and documents are kept.</p>
           </form>
         </>
       )}

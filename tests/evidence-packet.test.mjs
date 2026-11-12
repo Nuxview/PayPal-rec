@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { strFromU8, unzipSync } from "fflate";
+import PDFDocument from "pdfkit";
 import { POST } from "../app/api/demo/reviewed-packet/route.ts";
 import { loadAgencyFixture } from "../lib/evidence/agency-fixture.ts";
 import { buildEvidencePacket } from "../lib/evidence/evidence-packet.ts";
+import { createPacketArchive } from "../lib/evidence/packet-archive.ts";
 import { buildReviewSnapshot } from "../lib/evidence/review-snapshot.ts";
 import { writeReviewDecision } from "../lib/evidence/review-state.ts";
 
@@ -72,6 +74,50 @@ test("a proposal without citations cannot enter the packet", async () => {
   review.proposals[0].citations = [];
   assert.throws(() => buildEvidencePacket(review, { version: review.version, decisions: { [id]: "accepted" } }),
     /missing its citations/);
+});
+
+test("PDF groups each claim's sources, preserves every excerpt and labels continued groups", async (t) => {
+  const rendered = [];
+  const original = PDFDocument.prototype.text;
+  t.mock.method(PDFDocument.prototype, "text", function (value, ...options) {
+    rendered.push(value);
+    return original.call(this, value, ...options);
+  });
+  const review = await loadReview();
+  const packet = buildEvidencePacket(review, {
+    version: review.version,
+    decisions: Object.fromEntries(review.proposals.map(({ id }) => [id, "accepted"])),
+  });
+  const files = unzipSync(await createPacketArchive(packet));
+  assert.deepEqual(JSON.parse(strFromU8(files["reviewed-evidence.json"])), packet);
+  for (const [index, claim] of packet.accepted_claims.entries()) {
+    const start = rendered.indexOf(claim.statement) + 1;
+    const next = packet.accepted_claims[index + 1];
+    const end = rendered.indexOf(next ? `${next.request}  |  ${next.title}` : "Open gaps");
+    const expected = [];
+    for (const id of new Set(claim.citations.map(({ sourceId }) => sourceId))) {
+      const citations = claim.citations.filter(({ sourceId }) => sourceId === id);
+      expected.push(`${id}  |  ${citations[0].name}`);
+      for (const citation of citations) {
+        expected.push(citation.location, citation.lines
+          ? citation.lines.map(({ number, text }) => `${number}: ${text}`).join("\n") : citation.value ?? "");
+      }
+    }
+    assert.deepEqual(rendered.slice(start, end).filter((text) => !text.endsWith(" (continued)")), expected);
+  }
+
+  rendered.length = 0;
+  const claim = packet.accepted_claims[0];
+  const citations = Array.from({ length: 45 }, (_, index) => ({
+    ...claim.citations[0], location: `Line ${index + 1}`,
+    lines: [{ number: index + 1, text: `Evidence excerpt ${index + 1}` }], value: null,
+  }));
+  await createPacketArchive({ ...packet, accepted_claims: [{ ...claim, citations }] });
+  assert.ok(rendered.includes(`${citations[0].sourceId}  |  ${citations[0].name} (continued)`));
+  for (const citation of citations) {
+    assert.ok(rendered.includes(citation.location));
+    assert.ok(rendered.includes(`${citation.lines[0].number}: ${citation.lines[0].text}`));
+  }
 });
 
 test("native download forms return the selected ZIP and redirect stale reviews with feedback", async () => {

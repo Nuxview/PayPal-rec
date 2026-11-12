@@ -35,3 +35,11 @@ npm run build
 ```
 
 Run `npm start` after building to serve the production build locally. See the [database migration](db/README.md), the [synthetic agency case](fixtures/restriction-agency-v1/README.md) and the [contributor workflow](CONTRIBUTING.md) for the next pieces.
+
+For the demo run order, explicit replay fallback and repeatable production HTTP check (`npm run demo:rehearse`), see the [demo rehearsal](docs/demo-rehearsal.md). Deferred server review history and complete request coverage are tracked in the [packet-trust backlog](docs/packet-trust-backlog.md).
+
+The browser Sandbox workspace accepts UTF-8 `.txt` files in the documented formats; it does not convert PDFs, images or Word documents. Its download is a review draft. For an actual limitation, the merchant submits the requested original records directly through PayPal. To test additional evidence in this prototype, import a new case with the complete updated set. See the [Sandbox setup and handoff](docs/paypal-sandbox-workspace.md) and [integration feedback follow-up](docs/sandbox-test-feedback.md).
+
+## License
+
+Copyright (C) 2026 Shadrackbond. Licensed under the [GNU General Public License, version 3 only](LICENSE).

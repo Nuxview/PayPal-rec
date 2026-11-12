@@ -16,8 +16,9 @@ export async function saveDemoDecision(data: FormData) {
   if (data.get("version") !== review.version) redirect("/demo/review?review=changed");
 
   const jar = await cookies();
+  const target = review.proposals.find((proposal) => proposal.id === id);
   const saved = writeReviewDecision(jar.get(agencyReviewCookie)?.value ?? null, review, id, decision);
-  if (!saved) redirect("/demo/review?review=invalid");
+  if (!saved || !target) redirect("/demo/review?review=invalid");
 
   jar.set(agencyReviewCookie, saved, {
     httpOnly: true,
@@ -26,5 +27,5 @@ export async function saveDemoDecision(data: FormData) {
     path: "/demo/review",
     maxAge: 60 * 60 * 24 * 7,
   });
-  redirect("/demo/review?review=saved");
+  redirect(`/demo/review?review=saved#request-${target.request}`);
 }

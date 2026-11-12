@@ -1,46 +1,96 @@
 # PayPal Sandbox workspace
 
-This is a private, single-operator workspace for local testing. It reads existing captures from PayPal Sandbox and stores them with the test notice and supporting documents you supply. It does not create payments, use live credentials, retrieve account limitations, or submit evidence to PayPal.
+This is a private, single-operator workspace for local testing. It retrieves existing captures from PayPal Sandbox and stores them with the test notice and supporting documents you supply. It does not retrieve account limitations or submit evidence to PayPal. The separate checkout CLI can create and capture a USD 10.00 test order using Sandbox funds.
 
-The workspace key grants shared access to all Sandbox cases; it does not identify a reviewer or provide separate merchant accounts. Unlock sessions last eight hours. Cases, documents, captures and parsed notice requests are stored in PostgreSQL, while review decisions stay in a case-specific browser cookie for eight hours after saving. Export reads that cookie. Clearing or expiring it returns proposals to pending; decisions have no database history or reviewer audit trail. A changed report or source snapshot requires review again. See [case persistence](../db/README.md) for the schema's current use.
+## What needs to be configured?
+
+| Task | Required setup |
+| --- | --- |
+| Create/approve/capture a test order, or preview a capture through the CLI | Node.js 26, installed dependencies and Sandbox client ID/secret |
+| Open the local checkout return page | App running on port 3000; no database needed |
+| Import, review or export a browser Sandbox case | API credentials, running PostgreSQL, both migrations, `DATABASE_URL` and `PAYPAL_SANDBOX_WEB_KEY` |
+
+For a complete browser test, finish **Set up locally** before importing a capture. You can run **Create a test capture** first to check the PayPal connection, but the browser workspace will remain unavailable until its additional configuration is complete. A configured URL alone does not establish that the database is ready.
 
 ## Set up locally
 
-1. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/), select **Sandbox** under **Apps & Credentials**. Use the client ID and secret from the Sandbox app associated with the test seller. Use a completed Sandbox capture ID from that seller, or [create a test capture](#create-a-test-capture). If you already completed a different Sandbox checkout, the capture ID appears in `purchase_units[].payments.captures[].id`. An order ID is not a capture ID.
-2. Use a local PostgreSQL 16+ database and apply [both migrations](../db/README.md). If you need a disposable database and have Docker:
+1. Use Node.js 26 from `.nvmrc` and run `npm ci` from the repository root. Create `.env.local` from `.env.example` if it does not already exist; preserve any existing values.
+2. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/), select **Sandbox** under **Apps & Credentials**. Put the test seller app's client ID and secret in `PAYPAL_SANDBOX_CLIENT_ID` and `PAYPAL_SANDBOX_CLIENT_SECRET`. Never use live credentials.
+3. Start PostgreSQL 16+. For a new disposable Docker database, run this command once:
 
    ```sh
    docker run --name paypal-rec-sandbox-db -e POSTGRES_PASSWORD=local_test_only \
      -e POSTGRES_DB=paypal_rec -p 127.0.0.1:5434:5432 -d postgres:16
+   ```
+
+   In a **separate step**, check readiness:
+
+   ```sh
    docker exec paypal-rec-sandbox-db pg_isready -U postgres -d paypal_rec
+   ```
+
+   The container starts asynchronously. An initial failure can mean it is still starting. Wait briefly and repeat the readiness command until it reports **accepting connections**. Do not run migrations before that result. If it keeps failing, inspect `docker logs paypal-rec-sandbox-db`. If the named container already exists, inspect/start it rather than repeating `docker run`.
+4. After readiness succeeds, apply each migration once, in order. Run the first command and check that it succeeds before running the second:
+
+   ```sh
    docker exec -i paypal-rec-sandbox-db psql -U postgres -d paypal_rec -v ON_ERROR_STOP=1 < db/migrations/001_case_evidence.sql
+   ```
+
+   ```sh
    docker exec -i paypal-rec-sandbox-db psql -U postgres -d paypal_rec -v ON_ERROR_STOP=1 < db/migrations/002_restriction_notice.sql
    ```
 
-   Run the migration commands once, after `pg_isready` reports that the server accepts connections. The example database URL is `postgresql://postgres:local_test_only@127.0.0.1:5434/paypal_rec`.
-3. Copy `.env.example` to `.env.local`. Set `PAYPAL_SANDBOX_CLIENT_ID`, `PAYPAL_SANDBOX_CLIENT_SECRET`, and `DATABASE_URL`. Generate a separate `PAYPAL_SANDBOX_WEB_KEY` with `openssl rand -hex 32`. Keep both secrets in your local environment.
-4. Run `npm ci` and `npm run dev -- --hostname 127.0.0.1`. Open [127.0.0.1:3000/sandbox](http://127.0.0.1:3000/sandbox), unlock it with the workspace key, enter your capture ID, and upload the notice and supporting `.txt` files. A linked Checkout order ID is optional; it supplies payer data only if the order contains the same capture and amount.
-5. Inspect the cited proposals and gaps, accept supported proposals, then download the reviewed ZIP. Reloading a stored case uses its imported snapshots and does not call PayPal again.
-
-Each import accepts one notice plus optional supporting documents, up to 25 `.txt` files total, 256 KiB per file and 768 KiB combined. The workspace key must contain at least 24 characters. Case creation stores all imported sources and the notice capture in one transaction; a failed import does not leave a partial case. The UI has no evidence-editing, payer-correction or case-deletion flow.
-
-You can check just the PayPal connection before setting up PostgreSQL with `npm run paypal:import -- --sandbox "$SANDBOX_CAPTURE_ID"`. A failed lookup never switches to fixture replay.
+   See [database setup](../db/README.md) for the schema and rollback-based smoke test.
+5. Set `DATABASE_URL` in `.env.local`. For the Docker example it is `postgresql://postgres:local_test_only@127.0.0.1:5434/paypal_rec`. Generate a separate workspace key with `openssl rand -hex 32` and put it in `PAYPAL_SANDBOX_WEB_KEY`; at least 24 characters are required. Keep these values out of Git.
+6. Run `npm run dev -- --hostname 127.0.0.1` on port 3000. Use [localhost:3000/sandbox](http://localhost:3000/sandbox) throughout this workflow; the checkout helper returns to that same hostname. Restart the app after changing environment values.
+7. Unlock the workspace with the configured workspace key. Import a completed capture ID, the test notice and supporting `.txt` files. A linked order ID is optional; it supplies payer data only if the order confirms the same capture and amount.
 
 ## Create a test capture
 
-With the Sandbox client ID and secret in `.env.local`, start `npm run dev` on port 3000 if you want the local return page to load. In a second terminal:
+These commands only need the Sandbox client ID and secret in `.env.local`. Keep the app running on port 3000 if you want the return page to load.
 
-```sh
-npm run paypal:checkout -- create
-```
+1. In another terminal, create the order:
 
-Open the printed `approval_url`. Sign in as a **Sandbox Personal buyer** from [Sandbox Accounts](https://developer.paypal.com/dashboard/accounts/), different from the seller account tied to the app, and approve the USD 10.00 test order. The approval page uses Sandbox funds only. The return page does not capture the order. After approval, pass the printed `order_id` to the capture command:
+   ```sh
+   npm run paypal:checkout -- create
+   ```
 
-```sh
-npm run paypal:checkout -- capture YOUR_ORDER_ID
-```
+   Save the printed `order_id`, then open `approval_url`. Creating an order does **not** produce a capture ID.
+2. Sign in as a **Sandbox Personal buyer** from [Sandbox Accounts](https://developer.paypal.com/dashboard/accounts/), different from the seller tied to the app, and approve the USD 10.00 order. PayPal returns you to the app. Approval and capture are separate steps; the return page does not capture automatically.
+3. The return page displays the order ID from its `token` parameter and the complete capture command. Copy that command, or use the `order_id` from step 1:
 
-Copy the resulting `capture_id` into the workspace, or preview it with `npm run paypal:import -- --sandbox YOUR_CAPTURE_ID`. Keep the `order_id` for the optional payer lookup. No database is needed for these commands. Repeating capture for a completed helper order returns its existing capture ID.
+   ```sh
+   npm run paypal:checkout -- capture YOUR_ORDER_ID
+   ```
+
+   The CLI verifies that this is an approved USD 10.00 helper order before capturing it. Its successful output contains **`capture_id`**. Repeating the command for an already completed helper order returns its existing capture ID.
+4. Copy that `capture_id` into the configured workspace's **Sandbox capture ID** field. Put the saved `order_id` in **Checkout order ID** if you want payer lookup. You do not need to find either ID in the PayPal dashboard's raw JSON.
+
+| Value | Where it comes from | Where to use it |
+| --- | --- | --- |
+| `order_id` | Create-command output, or `token` on the return URL | Capture command and optional workspace order field |
+| `capture_id` | Successful capture-command output | Workspace capture field and capture preview/import |
+| `PayerID` | PayPal return URL | Do not use as the order or capture ID |
+
+Before setting up PostgreSQL, you can preview the completed capture with `npm run paypal:import -- --sandbox YOUR_CAPTURE_ID`. A failed lookup remains an error; it never substitutes fixture replay. Follow [PayPal's Orders v2 workflow](https://developer.paypal.com/api/rest/integration/orders-api) for the underlying create/approve/capture sequence.
+
+## What does the workspace key do?
+
+`PAYPAL_SANDBOX_WEB_KEY` is a shared access password for this prototype, separate from the PayPal API credentials. The environment value is the server's expected key; entering the same value in the browser proves that you know it. A successful unlock creates an eight-hour browser session granting access to **all** Sandbox cases. You do not supply a different key for each case.
+
+Locking ends the current browser's workspace access; it does not delete stored cases or documents. The key does not identify a reviewer or provide separate merchant accounts. Cases, documents, captures and parsed requests are stored in PostgreSQL. Review decisions remain in a case-specific cookie for eight hours after saving; they have no database history or reviewer audit trail. Clearing or expiring that cookie returns proposals to pending. See [case persistence](../db/README.md).
+
+## After reviewing and downloading
+
+Read the PDF and its open follow-ups, then gather missing records or clarify unresolved points. The ZIP is a **review draft**, not an automatic PayPal submission or a guarantee that its contents satisfy PayPal's requested formats. For an actual limitation, the merchant submits the requested original records directly in PayPal, following that case's instructions. Sandbox test records are for practice.
+
+The browser currently cannot append, replace or correct evidence in an existing case. To test more evidence, import a **new case** with the same capture ID, the notice and the complete updated supporting-document set. Reuse unchanged documents and add the new ones. The old case stays intact; decisions do not carry over. Reloading an old case uses its stored snapshots rather than re-fetching PayPal. Case updates and durable review history require separate implementation.
+
+## Supported documents and current limits
+
+Uploads accept one notice plus optional supporting documents: **UTF-8 `.txt` only**, up to 25 files including the notice, 256 KiB each and 768 KiB combined. The app does not extract text from PDFs, images or Word documents and has no OCR. The matcher recognizes the specific text formats below; arbitrary text or a generic conversion is not sufficient. Current citations point to the supplied text snapshot, not an original PDF or scan. See [document import](document-import.md).
+
+Case creation stores all sources and notice capture in one transaction; a failed import leaves no partial case. The UI has no evidence-editing, payer-correction or case-deletion flow.
 
 ## Make a matching test case
 

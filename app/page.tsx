@@ -13,6 +13,7 @@ export default function Home() {
       </p>
       <p className="mt-8 border-l-2 border-sky-400 pl-4 text-sm text-slate-300">
         Try the synthetic case or import a test capture in the private Sandbox workspace.
+        {" "}Review a draft here, then submit the requested records through PayPal. This app does not send evidence or remove account limitations.
       </p>
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Link href="/demo/review" className="rounded-md bg-sky-300 px-4 py-2 font-semibold text-slate-950 hover:bg-sky-200">

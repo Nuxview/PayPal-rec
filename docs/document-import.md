@@ -14,7 +14,7 @@ For merchant evidence, use one or more local UTF-8 `.txt` files:
 npm run documents:import -- --file invoice.txt --file delivery-note.txt
 ```
 
-The importer accepts up to 25 files per command, at most 256 KiB per file. It rejects unsupported extensions, empty or invalid text, and PDF headers even when a file is renamed to `.txt`. PDFs, images and office documents need separate extraction before import.
+The importer accepts up to 25 files per command, at most 256 KiB per file. It rejects unsupported extensions, empty or invalid text, and PDF headers even when a file is renamed to `.txt`. PDFs, images and Word documents are not accepted or converted by this app; it has no OCR. For this prototype, prepare UTF-8 text manually using the [supported record formats](paypal-sandbox-workspace.md#make-a-matching-test-case). Merely converting a document to arbitrary plain text does not ensure the matcher can read it. Citations resolve to the supplied `.txt` snapshot, not an original PDF, image or office document.
 
 Both commands preview by default. To store the documents, set `DATABASE_URL` in `.env.local` or your shell and use an existing case UUID and its merchant key. See the [case setup example](paypal-import.md#store-the-payment-as-case-evidence).
 

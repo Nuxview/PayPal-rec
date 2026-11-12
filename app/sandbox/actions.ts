@@ -81,8 +81,9 @@ export async function saveSandboxDecision(data: FormData) {
   if (!loaded || data.get("version") !== loaded.review.version) redirect(`${path}?review=changed`);
   const jar = await cookies();
   const name = sandboxReviewCookie(id);
+  const target = loaded.review.proposals.find((item) => item.id === proposal);
   const saved = writeReviewDecision(jar.get(name)?.value ?? null, loaded.review, proposal, decision);
-  if (!saved) redirect(`${path}?review=invalid`);
+  if (!saved || !target) redirect(`${path}?review=invalid`);
   jar.set(name, saved, { httpOnly: true, sameSite: "strict", secure: await secureCookie(), path, maxAge: sandboxSessionSeconds });
-  redirect(`${path}?review=saved`);
+  redirect(`${path}?review=saved#request-${target.request}`);
 }

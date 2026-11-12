@@ -25,7 +25,11 @@ function renderPacketPdf(packet: EvidencePacket): Promise<Buffer> {
     const accent = "#075981";
 
     function keepSpace(height: number) {
-      if (doc.y + height > doc.page.height - margin) doc.addPage();
+      if (doc.y + height > doc.page.height - margin) {
+        doc.addPage();
+        return true;
+      }
+      return false;
     }
 
     function section(title: string) {
@@ -45,21 +49,39 @@ function renderPacketPdf(packet: EvidencePacket): Promise<Buffer> {
 
     section("Accepted claims");
     for (const claim of packet.accepted_claims) {
-      keepSpace(92);
+      keepSpace(150);
       doc.font("Strong").fontSize(12).fillColor(ink).text(`${claim.request}  |  ${claim.title}`);
       doc.moveDown(0.3);
       doc.font("Body").fontSize(10.5).fillColor(ink).text(claim.statement, { lineGap: 2 });
       doc.moveDown(0.5);
-      for (const citation of claim.citations) {
-        const excerpt = citation.lines
-          ? citation.lines.map(({ number, text }) => `${number}: ${text}`).join("\n")
-          : citation.value ?? "";
-        const caption = `${citation.sourceId}  |  ${citation.name}  |  ${citation.location}`;
-        doc.font("Body").fontSize(9);
-        keepSpace(Math.min(125, doc.heightOfString(excerpt, { width: width - 14, lineGap: 2 }) + 32));
-        doc.font("Strong").fontSize(9).fillColor(accent).text(caption, { indent: 7 });
-        doc.font("Body").fontSize(9).fillColor(muted).text(excerpt, { indent: 7, lineGap: 2 });
-        doc.moveDown(0.45);
+      for (const [sourceId, citations] of Map.groupBy(claim.citations, ({ sourceId }) => sourceId)) {
+        const caption = `${sourceId}  |  ${citations[0].name}`;
+        for (const [index, citation] of citations.entries()) {
+          const excerpt = citation.lines
+            ? citation.lines.map(({ number, text }) => `${number}: ${text}`).join("\n")
+            : citation.value ?? "";
+          doc.font("Strong").fontSize(9);
+          const headingHeight = doc.heightOfString(caption, { width: width - 14 });
+          doc.fontSize(8);
+          const locationHeight = doc.heightOfString(citation.location, { width: 75 });
+          doc.font("Body").fontSize(9);
+          const newPage = keepSpace(Math.min(125,
+            Math.max(locationHeight, doc.heightOfString(excerpt, { width: width - 95, lineGap: 2 })) + headingHeight + 12));
+          // shortcut: repeat headings between excerpts; add page-level headings if individual excerpts span pages.
+          if (index === 0 || newPage) {
+            doc.font("Strong").fontSize(9).fillColor(accent)
+              .text(`${caption}${index > 0 ? " (continued)" : ""}`, { indent: 7 });
+            doc.moveDown(0.3);
+          }
+          const top = doc.y;
+          const page = doc.page;
+          doc.font("Strong").fontSize(8).fillColor(muted).text(citation.location, margin + 7, top, { width: 75 });
+          doc.font("Body").fontSize(9).fillColor(ink).text(excerpt, margin + 95, top, { width: width - 95, lineGap: 2 });
+          if (doc.page === page) doc.y = Math.max(doc.y, top + locationHeight);
+          doc.x = margin;
+          doc.moveDown(0.45);
+        }
+        doc.moveDown(0.3);
       }
       doc.moveDown(0.4);
     }
