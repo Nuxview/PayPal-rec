@@ -1,5 +1,5 @@
 import type { parseRestrictionNotice } from "../../../lib/evidence/notice";
-import Link from "next/link";
+import type { SandboxReviewEvent } from "../../../lib/evidence/mongo-sandbox-case";
 import type { ReviewCitation, ReviewSnapshot } from "../../../lib/evidence/review-snapshot";
 import type { ReviewDecisions } from "../../../lib/evidence/review-state";
 import { ActionButton } from "../../action-button";
@@ -7,7 +7,7 @@ import { Icon } from "../../ui";
 import { saveDemoDecision } from "./actions";
 import { DownloadPacket } from "./download-packet";
 
-function CitationInspector({ citations, group }: { citations: ReviewCitation[]; group: string }) {
+export function CitationInspector({ citations, group }: { citations: ReviewCitation[]; group: string }) {
   if (!citations.length) return null;
   const sources = Map.groupBy(citations, ({ sourceId }) => sourceId);
 
@@ -51,7 +51,10 @@ const decisionLabel = { accepted: "Accepted", rejected: "Rejected", pending: "Pe
 export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox }: {
   requests: ReturnType<typeof parseRestrictionNotice>["requests"];
   review: ReviewSnapshot; decisions: ReviewDecisions; feedback?: string | string[];
-  sandbox?: { caseId: string; save: (data: FormData) => Promise<void> };
+  sandbox?: {
+    caseId: string; save: (data: FormData) => Promise<void>; serial: string; canDecide: boolean; editable: boolean;
+    currentEvents?: ReadonlyMap<string, SandboxReviewEvent>;
+  };
 }) {
   const counts = review.proposals.reduce((count, { id }) => {
     count[decisions[id] ?? "pending"]++;
@@ -59,11 +62,11 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
   }, { pending: 0, accepted: 0, rejected: 0 });
 
   const message = feedback === "saved"
-    ? counts.accepted + counts.rejected > 0
+    ? sandbox || counts.accepted + counts.rejected > 0
       ? "Decision saved."
       : "Your browser did not keep the decision. Allow cookies for this site and try again."
     : feedback === "undone" ? "Decision cleared. The statement is pending again."
-    : feedback === "changed" ? "The evidence changed. Review the updated proposals before downloading."
+    : feedback === "changed" ? "The case changed. Check the current evidence and decisions before continuing."
     : feedback === "invalid" ? "That decision could not be saved. Try again from a proposal below."
     : feedback === "empty" ? "Accept at least one proposal before downloading."
     : feedback === "export-failed" ? "The packet could not be generated. Try downloading again."
@@ -85,7 +88,7 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
           <div><dt className="text-muted">Accepted</dt><dd className="text-xl font-semibold tabular-nums text-brand">{counts.accepted}</dd></div>
           <div><dt className="text-muted">Rejected</dt><dd className="text-xl font-semibold tabular-nums text-danger">{counts.rejected}</dd></div>
         </dl>
-        <p className="detail-copy">Decisions are saved in this browser.</p>
+        <p className="detail-copy">{sandbox ? "Sandbox decisions are saved on the server." : "Decisions are saved in this browser."}</p>
         {message && <p role={error ? "alert" : "status"} className={`feedback ${error ? "feedback-error" : ""}`}>{message}</p>}
       </aside>
       <div className="min-w-0 space-y-8">
@@ -107,6 +110,7 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
                   {!proposals.length && !followUp.length && <p className="p-5 text-sm text-warn">No supporting statement has been proposed for this request. It still needs review.</p>}
                   {proposals.map((item) => {
                     const decision = Object.hasOwn(decisions, item.id) ? decisions[item.id] : "pending";
+                    const event = sandbox?.currentEvents?.get(item.id);
                     return (
                       <article key={item.id} aria-label={item.title} className="p-5">
                         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -116,9 +120,13 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
                           </span>
                         </div>
                         <p className="detail-copy mt-2">{item.statement}</p>
+                        {event && <p className="detail-copy mt-2">
+                          {decision === "pending" ? "Cleared" : decisionLabel[decision]} by {event.reviewer} · <time>{event.at.toISOString()}</time>
+                        </p>}
                         <CitationInspector citations={item.citations} group={item.id} />
-                        <form action={sandbox?.save ?? saveDemoDecision} className="mt-4 flex flex-wrap gap-2">
+                        {(!sandbox || sandbox.canDecide) && <form action={sandbox?.save ?? saveDemoDecision} className="mt-4 flex flex-wrap gap-2">
                           {sandbox && <input type="hidden" name="case" value={sandbox.caseId} />}
+                          {sandbox && <input type="hidden" name="serial" value={sandbox.serial} />}
                           <input type="hidden" name="proposal" value={item.id} />
                           <input type="hidden" name="version" value={review.version} />
                           {([["accepted", "Accept"], ["rejected", "Reject"], ["pending", "Undo"]] as const).map(([choice, label]) => {
@@ -130,7 +138,7 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
                               {label}
                             </ActionButton>;
                           })}
-                        </form>
+                        </form>}
                       </article>
                     );
                   })}
@@ -169,12 +177,14 @@ export function ReviewWorkspace({ review, requests, decisions, feedback, sandbox
             path={sandbox ? `/sandbox/cases/${sandbox.caseId}/packet` : "/api/demo/reviewed-packet"}
             accepted={counts.accepted}
             selection={sandbox ? undefined : JSON.stringify({ version: review.version, decisions })}
+            version={sandbox ? review.version : undefined}
+            serial={sandbox?.serial}
           />
           <details className="rounded-lg bg-leaf px-4">
             <summary className="min-h-11 content-center py-2 text-sm font-semibold text-brand">What happens after download?</summary>
             <div className="space-y-2 pb-4">
               <p className="detail-copy">{sandbox ? "This is a test draft. For an actual limitation, use the instructions in your PayPal case to submit original records." : "Use this fictional case to practice. For a real limitation, review any open follow-ups and submit the requested original records through PayPal."}</p>
-              {sandbox && <Link href="/sandbox" className="text-link inline-flex min-h-11 items-center gap-2 text-sm">Import updated evidence as a new case <Icon name="arrow" /></Link>}
+              {sandbox?.editable && <a href="#case-edit" className="text-link inline-flex min-h-11 items-center gap-2 text-sm">Update case evidence <Icon name="arrow" /></a>}
             </div>
           </details>
         </section>

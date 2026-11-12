@@ -3,8 +3,9 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { exceedsSandboxUploadLimits, sandboxUploadLimitMessage } from "../../lib/evidence/document-limits";
-import { DocumentIngestError, merchantDocument } from "../../lib/evidence/documents";
+import { DocumentIngestError, isSelectedUpload, merchantDocument } from "../../lib/evidence/documents";
 import { EvidenceMatchError } from "../../lib/evidence/match-store";
+import { archiveMongoSandboxCase, mongoSandboxCases, SandboxCaseConflict, saveMongoSandboxDecision, updateMongoSandboxEvidence } from "../../lib/evidence/mongo-sandbox-case";
 import { caseUuid } from "../../lib/evidence/sandbox-case";
 import { reportSandboxStorageFailure } from "../../lib/evidence/sandbox-storage-errors";
 import { writeReviewDecision } from "../../lib/evidence/review-state";
@@ -12,7 +13,8 @@ import { loadSandboxPayment } from "../../lib/paypal/sandbox";
 import { captureTestOrder, checkoutReturnPage, createTestOrder, isTestOrderId } from "../../lib/paypal/test-checkout";
 import { PaymentImportError } from "../../lib/paypal/payment";
 import { openSandboxSession, sandboxConfig, sandboxSessionCookie, sandboxSessionSeconds } from "../../lib/paypal/sandbox-access";
-import { authorizedSandbox, sandboxCaseStore, sandboxReviewCookie } from "./access";
+import { openReviewerSession, reviewerCookie } from "../../lib/paypal/reviewer-access";
+import { authorizedSandbox, sandboxCaseStore, sandboxReviewer } from "./access";
 
 async function secureCookie() {
   return (await headers()).get("x-forwarded-proto")?.split(",")[0].trim() === "https";
@@ -38,7 +40,10 @@ export async function unlockSandbox(data: FormData) {
 }
 
 export async function lockSandbox() {
-  (await cookies()).set(sandboxSessionCookie, "", { path: "/sandbox", maxAge: 0, httpOnly: true, sameSite: "strict" });
+  const jar = await cookies();
+  for (const name of [sandboxSessionCookie, reviewerCookie]) {
+    jar.set(name, "", { path: "/sandbox", maxAge: 0, httpOnly: true, sameSite: "strict" });
+  }
   redirect("/sandbox");
 }
 
@@ -55,7 +60,10 @@ function paymentError(error: unknown) {
 export async function startSandboxCheckout() {
   const config = await authorizedSandbox();
   if (!config) return { error: expired };
-  const returnPage = checkoutReturnPage(process.env.PAYPAL_SANDBOX_RETURN_ORIGIN?.trim(), (await headers()).get("host"));
+  const host = (await headers()).get("host");
+  const deployment = process.env.VERCEL_URL;
+  const origin = process.env.PAYPAL_SANDBOX_RETURN_ORIGIN?.trim() || (deployment && host === deployment ? `https://${deployment}` : undefined);
+  const returnPage = checkoutReturnPage(origin, host);
   if (!returnPage) return { error: "The app needs a valid public HTTPS return address to start checkout. Ask the workspace administrator, or use an existing capture." };
   try {
     return { order: await createTestOrder(config, fetch, returnPage) };
@@ -95,12 +103,11 @@ export async function createSandboxCase(data: FormData) {
   const order = data.get("order");
   const notice = data.get("notice");
   const pasted = data.get("noticeText");
-  const files = data.getAll("documents").filter((item): item is File => typeof item !== "string" && Boolean(item.name));
-  let saving = false;
+  const files = data.getAll("documents").filter(isSelectedUpload);
   try {
     if (typeof capture !== "string" || !capture.trim()) throw new PaymentImportError("Enter a Sandbox capture ID.");
     const noticeBytes = typeof pasted === "string" && pasted.trim() ? new TextEncoder().encode(pasted) : null;
-    const noticeFile = notice && typeof notice !== "string" && notice.name ? notice : null;
+    const noticeFile = isSelectedUpload(notice) ? notice : null;
     const selected = noticeFile ?? noticeBytes;
     if (!selected || (noticeFile && noticeBytes)) {
       throw new DocumentIngestError("Upload one notice file or paste the notice text.");
@@ -127,21 +134,87 @@ export async function createSandboxCase(data: FormData) {
   }
 }
 
-export async function saveSandboxDecision(data: FormData) {
+async function sandboxMutation(data: FormData) {
   const config = await authorizedSandbox();
   const id = data.get("case");
   if (!config || typeof id !== "string" || !caseUuid.test(id)) redirect("/sandbox");
   const path = `/sandbox/cases/${id}`;
+  const reviewer = await sandboxReviewer(config.key);
+  if (!reviewer || typeof config.database === "string") redirect(`${path}?review=signin#reviewer-access`);
+  const version = data.get("version");
+  const serial = data.get("serial");
+  if (typeof version !== "string" || !/^[a-f0-9]{64}$/.test(version) ||
+      typeof serial !== "string" || (serial && !caseUuid.test(serial))) redirect(`${path}?review=invalid`);
+  return { config, cases: mongoSandboxCases(config.database), reviewer, id, path, version, serial };
+}
+
+export async function signInSandboxReviewer(data: FormData) {
+  const config = await authorizedSandbox();
+  const caseId = data.get("case");
+  if (!config || typeof caseId !== "string" || !caseUuid.test(caseId)) redirect("/sandbox");
+  const path = `/sandbox/cases/${caseId}`;
+  const id = data.get("reviewer");
+  const token = data.get("reviewerToken");
+  const session = typeof id === "string" && typeof token === "string" && id.length <= 64 && token.length === 64
+    ? openReviewerSession(config.key, id, token) : null;
+  if (!session) redirect(`${path}?review=signin-failed#reviewer-access`);
+  (await cookies()).set(reviewerCookie, session, { httpOnly: true, secure: await secureCookie(),
+    sameSite: "strict", path: "/sandbox", maxAge: sandboxSessionSeconds });
+  redirect(`${path}#reviewer-access`);
+}
+
+export async function signOutSandboxReviewer(data: FormData) {
+  const id = data.get("case");
+  (await cookies()).set(reviewerCookie, "", { httpOnly: true, sameSite: "strict", path: "/sandbox", maxAge: 0 });
+  redirect(typeof id === "string" && caseUuid.test(id) ? `/sandbox/cases/${id}#reviewer-access` : "/sandbox");
+}
+
+export async function saveSandboxDecision(data: FormData) {
+  const { cases, id, reviewer, path, version, serial } = await sandboxMutation(data);
   const proposal = data.get("proposal");
   const decision = data.get("decision");
   if (typeof proposal !== "string" || (decision !== "accepted" && decision !== "rejected" && decision !== "pending")) redirect(`${path}?review=invalid`);
-  const loaded = await sandboxCaseStore(config.database).loadReview(id).catch(() => null);
-  if (!loaded || data.get("version") !== loaded.review.version) redirect(`${path}?review=changed`);
-  const jar = await cookies();
-  const name = sandboxReviewCookie(id);
-  const target = loaded.review.proposals.find((item) => item.id === proposal);
-  const saved = writeReviewDecision(jar.get(name)?.value ?? null, loaded.review, proposal, decision);
-  if (!saved || !target) redirect(`${path}?review=invalid`);
-  jar.set(name, saved, { httpOnly: true, sameSite: "strict", secure: await secureCookie(), path, maxAge: sandboxSessionSeconds });
-  redirect(`${path}?review=${decision === "pending" ? "undone" : "saved"}#request-${target.request}`);
+  let request;
+  try {
+    request = await saveMongoSandboxDecision(cases, id, version, serial, proposal, decision, reviewer);
+  } catch (error) {
+    redirect(`${path}?review=${error instanceof SandboxCaseConflict ? "changed" : "invalid"}`);
+  }
+  redirect(`${path}?review=${decision === "pending" ? "undone" : "saved"}#request-${request}`);
+}
+
+export async function updateSandboxCase(data: FormData) {
+  const { config, cases, id, reviewer, path, version, serial } = await sandboxMutation(data);
+  const notice = data.get("replacementNotice");
+  const files = data.getAll("documents").filter(isSelectedUpload);
+  const selectedNotice = isSelectedUpload(notice) ? notice : undefined;
+  const withdraw = data.getAll("withdraw").filter((item): item is string => typeof item === "string");
+  const order = data.get("linkedOrder");
+  let changed;
+  try {
+    const uploads = selectedNotice ? [selectedNotice, ...files] : files;
+    if (exceedsSandboxUploadLimits(uploads.map(({ size }) => size))) throw new DocumentIngestError(sandboxUploadLimitMessage);
+    changed = await updateMongoSandboxEvidence(cases, id, version, serial, reviewer, {
+      documents: await Promise.all(files.map(readUpload)),
+      notice: selectedNotice ? await readUpload(selectedNotice) : undefined,
+      withdraw, orderId: typeof order === "string" && order.trim() ? order.trim() : undefined,
+    }, config);
+  } catch (error) {
+    const problem = error instanceof DocumentIngestError || error instanceof PaymentImportError || error instanceof EvidenceMatchError
+      ? error.message : "Could not save the case. Try again.";
+    redirect(error instanceof SandboxCaseConflict ? `${path}?review=changed#case-edit`
+      : `${path}?problem=${encodeURIComponent(problem)}#case-edit`);
+  }
+  redirect(`${path}?review=${changed ? "revised" : "unchanged"}#case-edit`);
+}
+
+export async function archiveSandboxCase(data: FormData) {
+  const { cases, id, reviewer, path, version, serial } = await sandboxMutation(data);
+  if (data.get("confirmArchive") !== "yes") redirect(`${path}?problem=Confirm+case+removal.#case-edit`);
+  try {
+    await archiveMongoSandboxCase(cases, id, version, serial, reviewer);
+  } catch (error) {
+    redirect(`${path}?review=${error instanceof SandboxCaseConflict ? "changed" : "invalid"}#case-edit`);
+  }
+  redirect("/sandbox?notice=archived");
 }

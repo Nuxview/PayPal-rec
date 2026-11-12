@@ -48,6 +48,7 @@ export default async function SandboxHome({ searchParams }: {
         </form>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          {query.notice === "archived" && <p role="status" className="feedback lg:col-span-2">Case removed from the workspace. Audit records are retained.</p>}
           <WorkspaceIntake resumedOrder={order} />
           <aside className="panel space-y-4 p-5" aria-labelledby="recent-title">
             <h2 id="recent-title" className="section-title">Recent cases</h2>
