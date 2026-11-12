@@ -8,7 +8,6 @@ import { EvidenceMatchError } from "../../lib/evidence/match-store";
 import { archiveMongoSandboxCase, mongoSandboxCases, SandboxCaseConflict, saveMongoSandboxDecision, updateMongoSandboxEvidence } from "../../lib/evidence/mongo-sandbox-case";
 import { caseUuid } from "../../lib/evidence/sandbox-case";
 import { reportSandboxStorageFailure } from "../../lib/evidence/sandbox-storage-errors";
-import { writeReviewDecision } from "../../lib/evidence/review-state";
 import { loadSandboxPayment } from "../../lib/paypal/sandbox";
 import { captureTestOrder, checkoutReturnPage, createTestOrder, isTestOrderId } from "../../lib/paypal/test-checkout";
 import { PaymentImportError } from "../../lib/paypal/payment";
@@ -104,6 +103,7 @@ export async function createSandboxCase(data: FormData) {
   const notice = data.get("notice");
   const pasted = data.get("noticeText");
   const files = data.getAll("documents").filter(isSelectedUpload);
+  let saving = false;
   try {
     if (typeof capture !== "string" || !capture.trim()) throw new PaymentImportError("Enter a Sandbox capture ID.");
     const noticeBytes = typeof pasted === "string" && pasted.trim() ? new TextEncoder().encode(pasted) : null;
@@ -145,7 +145,7 @@ async function sandboxMutation(data: FormData) {
   const serial = data.get("serial");
   if (typeof version !== "string" || !/^[a-f0-9]{64}$/.test(version) ||
       typeof serial !== "string" || (serial && !caseUuid.test(serial))) redirect(`${path}?review=invalid`);
-  return { config, cases: mongoSandboxCases(config.database), reviewer, id, path, version, serial };
+  return { config, database: config.database, reviewer, id, path, version, serial };
 }
 
 export async function signInSandboxReviewer(data: FormData) {
@@ -170,13 +170,13 @@ export async function signOutSandboxReviewer(data: FormData) {
 }
 
 export async function saveSandboxDecision(data: FormData) {
-  const { cases, id, reviewer, path, version, serial } = await sandboxMutation(data);
+  const { database, id, reviewer, path, version, serial } = await sandboxMutation(data);
   const proposal = data.get("proposal");
   const decision = data.get("decision");
   if (typeof proposal !== "string" || (decision !== "accepted" && decision !== "rejected" && decision !== "pending")) redirect(`${path}?review=invalid`);
   let request;
   try {
-    request = await saveMongoSandboxDecision(cases, id, version, serial, proposal, decision, reviewer);
+    request = await saveMongoSandboxDecision(await mongoSandboxCases(database), id, version, serial, proposal, decision, reviewer);
   } catch (error) {
     redirect(`${path}?review=${error instanceof SandboxCaseConflict ? "changed" : "invalid"}`);
   }
@@ -184,7 +184,7 @@ export async function saveSandboxDecision(data: FormData) {
 }
 
 export async function updateSandboxCase(data: FormData) {
-  const { config, cases, id, reviewer, path, version, serial } = await sandboxMutation(data);
+  const { config, database, id, reviewer, path, version, serial } = await sandboxMutation(data);
   const notice = data.get("replacementNotice");
   const files = data.getAll("documents").filter(isSelectedUpload);
   const selectedNotice = isSelectedUpload(notice) ? notice : undefined;
@@ -194,7 +194,7 @@ export async function updateSandboxCase(data: FormData) {
   try {
     const uploads = selectedNotice ? [selectedNotice, ...files] : files;
     if (exceedsSandboxUploadLimits(uploads.map(({ size }) => size))) throw new DocumentIngestError(sandboxUploadLimitMessage);
-    changed = await updateMongoSandboxEvidence(cases, id, version, serial, reviewer, {
+    changed = await updateMongoSandboxEvidence(await mongoSandboxCases(database), id, version, serial, reviewer, {
       documents: await Promise.all(files.map(readUpload)),
       notice: selectedNotice ? await readUpload(selectedNotice) : undefined,
       withdraw, orderId: typeof order === "string" && order.trim() ? order.trim() : undefined,
@@ -209,10 +209,10 @@ export async function updateSandboxCase(data: FormData) {
 }
 
 export async function archiveSandboxCase(data: FormData) {
-  const { cases, id, reviewer, path, version, serial } = await sandboxMutation(data);
+  const { database, id, reviewer, path, version, serial } = await sandboxMutation(data);
   if (data.get("confirmArchive") !== "yes") redirect(`${path}?problem=Confirm+case+removal.#case-edit`);
   try {
-    await archiveMongoSandboxCase(cases, id, version, serial, reviewer);
+    await archiveMongoSandboxCase(await mongoSandboxCases(database), id, version, serial, reviewer);
   } catch (error) {
     redirect(`${path}?review=${error instanceof SandboxCaseConflict ? "changed" : "invalid"}#case-edit`);
   }

@@ -63,7 +63,7 @@ type StoredPacket = {
   archive: Binary;
 };
 
-function mongoSandboxDatabase({ uri, name }: MongoSandboxConnection) {
+async function mongoSandboxDatabase({ uri, name }: MongoSandboxConnection) {
   if (connection?.uri !== uri) {
     const client = new MongoClient(uri, {
       maxPoolSize: 5,
@@ -80,15 +80,15 @@ function mongoSandboxDatabase({ uri, name }: MongoSandboxConnection) {
     });
     connection = { uri, ready };
   }
-  return connection.client.db(name);
+  return (await connection.ready).db(name);
 }
 
-export function mongoSandboxCases(connection: MongoSandboxConnection) {
-  return mongoSandboxDatabase(connection).collection<StoredCase>("sandbox_cases");
+export async function mongoSandboxCases(connection: MongoSandboxConnection) {
+  return (await mongoSandboxDatabase(connection)).collection<StoredCase>("sandbox_cases");
 }
 
-export function mongoSandboxPackets(connection: MongoSandboxConnection) {
-  return mongoSandboxDatabase(connection).collection<StoredPacket>("sandbox_case_packets");
+export async function mongoSandboxPackets(connection: MongoSandboxConnection) {
+  return (await mongoSandboxDatabase(connection)).collection<StoredPacket>("sandbox_case_packets");
 }
 
 export async function retainSandboxPacket(

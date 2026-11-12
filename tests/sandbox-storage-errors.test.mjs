@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MongoClient } from "mongodb";
-import { mongoSandboxCases } from "../lib/evidence/mongo-sandbox-case.ts";
+import { mongoSandboxCases, mongoSandboxPackets } from "../lib/evidence/mongo-sandbox-case.ts";
 import { reportSandboxStorageFailure } from "../lib/evidence/sandbox-storage-errors.ts";
 
 test("Sandbox storage reports distinct actionable failures without leaking connection or case data", (t) => {
@@ -39,9 +39,12 @@ test("a failed initial MongoDB connection is discarded so a later request can re
 
   await assert.rejects(mongoSandboxCases(database), /first connection failed/);
   assert.equal(close.mock.calls[0].this, clients[0]);
-  const [first, second] = await Promise.all([mongoSandboxCases(database), mongoSandboxCases(database)]);
+  const [first, second, packets] = await Promise.all([
+    mongoSandboxCases(database), mongoSandboxCases(database), mongoSandboxPackets(database),
+  ]);
   assert.equal(first.collectionName, "sandbox_cases");
   assert.equal(second.collectionName, "sandbox_cases");
+  assert.equal(packets.collectionName, "sandbox_case_packets");
   assert.notEqual(clients[1], clients[0]);
   assert.equal(connect.mock.callCount(), 2);
 });

@@ -11,10 +11,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     return new Response(null, { status: 404 });
   }
   const scope = { merchantKey: sandboxMerchant };
-  const active = await mongoSandboxCases(access.database).findOne({ ...scope, _id: id, archived: { $exists: false } },
+  const cases = await mongoSandboxCases(access.database);
+  const active = await cases.findOne({ ...scope, _id: id, archived: { $exists: false } },
     { projection: { _id: 1 } });
   if (!active) return new Response(null, { status: 404 });
-  const packet = await mongoSandboxPackets(access.database).findOne({ ...scope, _id: `${id}/${serial}` });
+  const packets = await mongoSandboxPackets(access.database);
+  const packet = await packets.findOne({ ...scope, _id: `${id}/${serial}` });
   if (!packet) return new Response(null, { status: 404 });
   return new Response(new Uint8Array(packet.archive.value()), {
     headers: {
