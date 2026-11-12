@@ -20,7 +20,7 @@ function failureKind(error: unknown, mongo: boolean): Kind {
     if (code === "42P01" || code === "42703" || code === "3F000") return "schema";
     if (code === "3D000") return "configuration";
   }
-  if (["MongoServerSelectionError", "MongoNetworkError", "MongoNetworkTimeoutError", "MongoWaitQueueTimeoutError"].includes(name) ||
+  if (["MongoServerSelectionError", "MongoNetworkError", "MongoNetworkTimeoutError", "MongoWaitQueueTimeoutError", "MongoTopologyClosedError"].includes(name) ||
     ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ETIMEDOUT", "ENETUNREACH", "ECONNRESET", "08P01", "08006"].includes(String(code)) ||
     (!mongo && message === "timeout expired")) return "connection";
   return "unknown";

@@ -22,21 +22,27 @@ type StoredCase = {
   sources: CaseSource[];
 };
 
-let connection: { uri: string; client: MongoClient } | undefined;
+let connection: { uri: string; ready: Promise<MongoClient> } | undefined;
 
-export function mongoSandboxCases({ uri, name }: { uri: string; name: string }) {
+export async function mongoSandboxCases({ uri, name }: { uri: string; name: string }) {
   if (connection?.uri !== uri) {
-    connection = {
-      uri,
-      client: new MongoClient(uri, {
-        maxPoolSize: 5,
-        serverSelectionTimeoutMS: 8_000,
-        waitQueueTimeoutMS: 8_000,
-        socketTimeoutMS: 10_000,
-      }),
-    };
+    const client = new MongoClient(uri, {
+      maxPoolSize: 5,
+      serverSelectionTimeoutMS: 8_000,
+      waitQueueTimeoutMS: 8_000,
+      socketTimeoutMS: 10_000,
+    });
+    const ready = client.connect().catch(async (error: unknown) => {
+      // The driver can leave a closed topology after a failed first connection.
+      // Discard that client so the next request starts a fresh connection.
+      if (connection?.ready === ready) connection = undefined;
+      await client.close().catch(() => {});
+      throw error;
+    });
+    connection = { uri, ready };
   }
-  return connection.client.db(name).collection<StoredCase>("sandbox_cases");
+  const client = await connection.ready;
+  return client.db(name).collection<StoredCase>("sandbox_cases");
 }
 
 export async function importMongoSandboxCase(

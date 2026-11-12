@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { MongoClient } from "mongodb";
+import { mongoSandboxCases } from "../lib/evidence/mongo-sandbox-case.ts";
 import { reportSandboxStorageFailure } from "../lib/evidence/sandbox-storage-errors.ts";
 
 test("Sandbox storage reports distinct actionable failures without leaking connection or case data", (t) => {
@@ -22,4 +24,24 @@ test("Sandbox storage reports distinct actionable failures without leaking conne
     assert.ok(result.includes(entry.reference));
     assert.doesNotMatch(result + JSON.stringify(entry), /db-secret|CASE-CONTENT/);
   }
+});
+
+
+test("a failed initial MongoDB connection is discarded so a later request can recover", async (t) => {
+  const clients = [];
+  const connect = t.mock.method(MongoClient.prototype, "connect", async function () {
+    clients.push(this);
+    if (clients.length === 1) throw new Error("first connection failed");
+    return this;
+  });
+  const close = t.mock.method(MongoClient.prototype, "close", async () => {});
+  const database = { uri: "mongodb://example.invalid:27017", name: "sandbox" };
+
+  await assert.rejects(mongoSandboxCases(database), /first connection failed/);
+  assert.equal(close.mock.calls[0].this, clients[0]);
+  const [first, second] = await Promise.all([mongoSandboxCases(database), mongoSandboxCases(database)]);
+  assert.equal(first.collectionName, "sandbox_cases");
+  assert.equal(second.collectionName, "sandbox_cases");
+  assert.notEqual(clients[1], clients[0]);
+  assert.equal(connect.mock.callCount(), 2);
 });
