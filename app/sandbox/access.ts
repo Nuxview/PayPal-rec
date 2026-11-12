@@ -34,9 +34,9 @@ export function sandboxCaseStore(database: NonNullable<ReturnType<typeof sandbox
   }
   return {
     importCase: async (input: SandboxCaseInput, credentials: SandboxCredentials) =>
-      importMongoSandboxCase(mongoSandboxCases(database), input, credentials),
-    loadReview: async (id: string) => loadMongoSandboxReview(mongoSandboxCases(database), id),
-    listCases: async () => listMongoSandboxCases(mongoSandboxCases(database)),
+      importMongoSandboxCase(await mongoSandboxCases(database), input, credentials),
+    loadReview: async (id: string) => loadMongoSandboxReview(await mongoSandboxCases(database), id),
+    listCases: async () => listMongoSandboxCases(await mongoSandboxCases(database)),
   };
 }
 
