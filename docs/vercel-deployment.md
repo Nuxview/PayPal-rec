@@ -18,6 +18,12 @@ With a manually configured Atlas connection, give the app's database user `readW
 
 MongoDB creates the `sandbox_cases` collection on the first successful import. It stores the capture and the immutable evidence together in a single write. With `MONGODB_URI` set, the browser uses MongoDB for all case operations. Existing PostgreSQL cases stay in their original database. You can still access them in a local workspace configured with just `DATABASE_URL`. The database-backed CLI import and matching tools still use PostgreSQL.
 
+## Diagnose Sandbox storage failures
+
+An Atlas cluster can be running while the application cannot reach it. Check **Recent cases** after unlocking the workspace. A connection error means the app could not reach the cluster; compare the app host's outbound address with the Atlas network access list. A credential error points to the database user and password, and a write-permission error means the account cannot save into the configured database. PayPal Sandbox checkout can succeed independently of case storage.
+
+The app shows a reference for unexpected storage errors. Search the runtime logs for that reference; the log includes the database backend, failed operation and error category without the URI or case contents. See [Atlas connection troubleshooting](https://www.mongodb.com/docs/atlas/troubleshoot-connection/).
+
 ## Enable AI evidence analysis
 
 For NVIDIA NIM, add `AI_PROVIDER=nvidia` and `NVIDIA_API_KEY` as server-side variables in the intended Vercel environment, then redeploy. Use `AI_PUBLIC_DEMO=true` only if judges should be able to run AI on the fictional case. See the [provider setup and smoke test](ai-evidence-review.md).

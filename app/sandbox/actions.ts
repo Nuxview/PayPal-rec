@@ -6,6 +6,7 @@ import { exceedsSandboxUploadLimits, sandboxUploadLimitMessage } from "../../lib
 import { DocumentIngestError, merchantDocument } from "../../lib/evidence/documents";
 import { EvidenceMatchError } from "../../lib/evidence/match-store";
 import { caseUuid } from "../../lib/evidence/sandbox-case";
+import { reportSandboxStorageFailure } from "../../lib/evidence/sandbox-storage-errors";
 import { writeReviewDecision } from "../../lib/evidence/review-state";
 import { loadSandboxPayment } from "../../lib/paypal/sandbox";
 import { captureTestOrder, checkoutReturnPage, createTestOrder, isTestOrderId } from "../../lib/paypal/test-checkout";
@@ -95,6 +96,7 @@ export async function createSandboxCase(data: FormData) {
   const notice = data.get("notice");
   const pasted = data.get("noticeText");
   const files = data.getAll("documents").filter((item): item is File => typeof item !== "string" && Boolean(item.name));
+  let saving = false;
   try {
     if (typeof capture !== "string" || !capture.trim()) throw new PaymentImportError("Enter a Sandbox capture ID.");
     const noticeBytes = typeof pasted === "string" && pasted.trim() ? new TextEncoder().encode(pasted) : null;
@@ -109,6 +111,7 @@ export async function createSandboxCase(data: FormData) {
     }
     const noticeDoc = selected instanceof Uint8Array ? merchantDocument("pasted-notice.txt", selected) : await readUpload(selected);
     const documents = await Promise.all(files.map(readUpload));
+    saving = true;
     const id = await sandboxCaseStore(config.database).importCase({
       captureId: capture.trim(),
       orderId: typeof order === "string" ? order.trim() || undefined : undefined,
@@ -119,7 +122,8 @@ export async function createSandboxCase(data: FormData) {
   } catch (error) {
     return { error: error instanceof PaymentImportError || error instanceof DocumentIngestError || error instanceof EvidenceMatchError
       ? error.message
-      : "Could not save the case. Check the workspace database configuration, then try again." };
+      : saving ? reportSandboxStorageFailure(config.database, "save", error)
+        : "Could not read the evidence files. Select them again and retry." };
   }
 }
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reportSandboxStorageFailure } from "../../lib/evidence/sandbox-storage-errors";
 import { sandboxConfig } from "../../lib/paypal/sandbox-access";
 import { isTestOrderId } from "../../lib/paypal/test-checkout";
 import { ActionButton } from "../action-button";
@@ -16,7 +17,10 @@ export default async function SandboxHome({ searchParams }: {
   const order = isTestOrderId(query.order) ? query.order : "";
   const configured = sandboxConfig();
   const access = await authorizedSandbox();
-  const cases = access ? await sandboxCaseStore(access.database).listCases().catch(() => null) : [];
+  const cases = access ? await sandboxCaseStore(access.database).listCases()
+    .then((items) => ({ items, error: null }))
+    .catch((error: unknown) => ({ items: [], error: reportSandboxStorageFailure(access.database, "list", error) }))
+    : { items: [], error: null };
 
   return (
     <main id="main" className="shell pb-16">
@@ -47,8 +51,8 @@ export default async function SandboxHome({ searchParams }: {
           <WorkspaceIntake resumedOrder={order} />
           <aside className="panel space-y-4 p-5" aria-labelledby="recent-title">
             <h2 id="recent-title" className="section-title">Recent cases</h2>
-            {cases === null ? <p role="status" className="feedback feedback-warn">Case storage is unavailable. Contact the workspace administrator before importing evidence.</p> :
-              cases.length ? <ul className="divide-y divide-rule">{cases.map(({ id, label }) => (
+            {cases.error ? <p role="status" className="feedback feedback-warn">{cases.error}</p> :
+              cases.items.length ? <ul className="divide-y divide-rule">{cases.items.map(({ id, label }) => (
                 <li key={id}><Link href={`/sandbox/cases/${id}`} className="text-link inline-flex min-h-11 items-center gap-2 break-all text-sm">{label} <Icon name="arrow" /></Link></li>
               ))}</ul> : <p className="detail-copy">Cases you create will appear here.</p>}
             <p className="detail-copy border-t border-rule pt-4">Sandbox funds and test documents only. Nothing is submitted to PayPal.</p>
